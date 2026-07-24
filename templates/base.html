@@ -185,20 +185,30 @@
     <div id="htmx-progress-bar"></div>
 
     <!-- هدر -->
-    <header class="bg-white/90 backdrop-blur border-b border-line sticky top-0 z-40">
+    <header id="siteHeader" class="bg-white/90 backdrop-blur border-b border-line sticky top-0 z-40 transition-shadow">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="{% url 'core:home' %}" class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-8 h-8 shrink-0">
+                        <rect width="100" height="100" rx="22" fill="#0E5D50"/>
+                        <path d="M50 20 L78 42 L78 80 L60 80 L60 58 L40 58 L40 80 L22 80 L22 42 Z" fill="#FAF6EF"/>
+                    </svg>
                     <span class="text-2xl font-bold font-display text-primary">پارسه</span>
                     <span class="hidden sm:inline text-xs text-ink/50">پلتفرم املاک</span>
                 </a>
-                <nav class="hidden md:flex items-center gap-8">
-                    <a href="{% url 'core:home' %}" class="text-ink/80 hover:text-primary font-medium transition">خانه</a>
-                    <a href="{% url 'properties:property_list' %}" class="text-ink/80 hover:text-primary font-medium transition">املاک</a>
-                    <a href="{% url 'blog:post_list' %}" class="text-ink/80 hover:text-primary font-medium transition">وبلاگ</a>
-                    <a href="{% url 'core:about' %}" class="text-ink/80 hover:text-primary font-medium transition">درباره ما</a>
-                    <a href="{% url 'core:faq' %}" class="text-ink/80 hover:text-primary font-medium transition">سوالات متداول</a>
-                    <a href="{% url 'contact:contact_page' %}" class="text-ink/80 hover:text-primary font-medium transition">تماس با ما</a>
+                {% url 'core:home' as url_home %}
+                {% url 'blog:post_list' as url_blog %}
+                {% url 'core:about' as url_about %}
+                {% url 'core:faq' as url_faq %}
+                {% url 'contact:contact_page' as url_contact %}
+                <nav class="hidden md:flex items-center gap-7">
+                    <a href="{{ url_home }}" class="font-medium transition {% if request.resolver_match.view_name == 'core:home' %}text-primary{% else %}text-ink/80 hover:text-primary{% endif %}">خانه</a>
+                    <a href="{% url 'properties:property_list' %}?type=sale" class="font-medium transition {% if request.resolver_match.app_name == 'properties' and request.GET.type == 'sale' %}text-primary{% else %}text-ink/80 hover:text-primary{% endif %}">خرید</a>
+                    <a href="{% url 'properties:property_list' %}?type=rent" class="font-medium transition {% if request.resolver_match.app_name == 'properties' and request.GET.type == 'rent' %}text-primary{% else %}text-ink/80 hover:text-primary{% endif %}">اجاره</a>
+                    <a href="{{ url_blog }}" class="font-medium transition {% if request.resolver_match.app_name == 'blog' %}text-primary{% else %}text-ink/80 hover:text-primary{% endif %}">وبلاگ</a>
+                    <a href="{{ url_about }}" class="font-medium transition {% if request.path == url_about %}text-primary{% else %}text-ink/80 hover:text-primary{% endif %}">درباره ما</a>
+                    <a href="{{ url_faq }}" class="font-medium transition {% if request.path == url_faq %}text-primary{% else %}text-ink/80 hover:text-primary{% endif %}">سوالات متداول</a>
+                    <a href="{{ url_contact }}" class="font-medium transition {% if request.resolver_match.app_name == 'contact' %}text-primary{% else %}text-ink/80 hover:text-primary{% endif %}">تماس با ما</a>
                 </nav>
                 <div class="flex items-center gap-2">
                     <button id="themeToggleBtn" aria-label="تغییر حالت روشن/تاریک"
@@ -248,7 +258,8 @@
         <nav id="mobileMenu" class="md:hidden hidden border-t border-line bg-white">
             <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
                 <a href="{% url 'core:home' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">خانه</a>
-                <a href="{% url 'properties:property_list' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">املاک</a>
+                <a href="{% url 'properties:property_list' %}?type=sale" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">خرید</a>
+                <a href="{% url 'properties:property_list' %}?type=rent" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">اجاره</a>
                 <a href="{% url 'blog:post_list' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">وبلاگ</a>
                 <a href="{% url 'core:about' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">درباره ما</a>
                 <a href="{% url 'core:faq' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">سوالات متداول</a>
@@ -381,8 +392,9 @@
             revealEls.forEach((el) => el.classList.add('is-visible'));
         }
 
-        // اسکرول به بالا
+        // اسکرول به بالا + سایه‌ی هدر هنگام اسکرول
         const scrollBtn = document.getElementById('scrollTopBtn');
+        const siteHeader = document.getElementById('siteHeader');
         window.addEventListener('scroll', () => {
             if (window.scrollY > 300) {
                 scrollBtn.classList.remove('hidden');
@@ -391,6 +403,7 @@
                 scrollBtn.classList.add('hidden');
                 scrollBtn.classList.remove('flex');
             }
+            siteHeader.classList.toggle('shadow-md', window.scrollY > 8);
         });
 
         // منوی موبایل
