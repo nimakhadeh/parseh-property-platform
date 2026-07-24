@@ -31,6 +31,10 @@
 
     <!-- فیلترها -->
     <form method="get" class="bg-white rounded-xl border border-line p-4 mb-8 space-y-4">
+        <div>
+            <label class="block text-sm text-ink/70 mb-1">جستجو بر اساس عنوان یا منطقه</label>
+            <input type="text" name="q" value="{{ request.GET.q }}" class="input-field" placeholder="مثلاً زعفرانیه، پنت‌هاوس...">
+        </div>
         <div class="flex flex-wrap gap-4 items-end">
             <div>
                 <label class="block text-sm text-ink/70 mb-1">نوع معامله</label>

@@ -1,5 +1,5 @@
 from django.views.generic import ListView, DetailView
-from django.db.models import F
+from django.db.models import F, Q
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
@@ -26,6 +26,10 @@ class PropertyListView(ListView):
         transaction_type = g.get("type")
         if transaction_type in ("sale", "rent"):
             qs = qs.filter(transaction_type=transaction_type)
+
+        query = g.get("q", "").strip()
+        if query:
+            qs = qs.filter(Q(title__icontains=query) | Q(address__icontains=query))
 
         if g.get("min_price"):
             qs = qs.filter(price__gte=g.get("min_price"))
