@@ -76,10 +76,13 @@ apps/
 ### ۶. تسک‌های Celery باید دقیقاً `tasks.py` نام‌گذاری شوند
 `autodiscover_tasks()` فقط دنبال فایل `tasks.py` در هر اپ می‌گردد (نه `valuation_tasks.py` یا اسم دیگر) وگرنه worker جدا اصلاً تسک را نمی‌شناسد. الان در `apps/ai/tasks.py`, `apps/contact/tasks.py`, `apps/properties/tasks.py`.
 
-### ۷. اعلان تلگرام — سرویس مشترک
+### ۷. بک‌آپ ابری خارج از سرور
+`backup_db.sh` بعد از بک‌آپ محلی PostgreSQL، اگر `RCLONE_REMOTE` در `.env` تنظیم شده باشد (و `rclone` نصب باشد)، فایل را با `rclone copy` به فضای ابری هم آپلود می‌کند و نسخه‌های ابری قدیمی‌تر از ۳۰ روز را پاک می‌کند. اگر `RCLONE_REMOTE` خالی باشد یا `rclone` نصب نباشد، این مرحله بی‌سروصدا رد می‌شود و فقط بک‌آپ محلی (که همیشه اجرا می‌شود) معتبر می‌ماند. شکست آپلود ابری کد خروج ۲ برمی‌گرداند (نه ۱) تا از شکست بک‌آپ محلی قابل تشخیص باشد.
+
+### ۸. اعلان تلگرام — سرویس مشترک
 منطق پایه در `apps/core/telegram.py::send_telegram_message()`. هر اپ (`contact`, `properties`) یک wrapper نازک روی آن دارد (`telegram_notify.py` / `valuation_notify.py`) که پیام مخصوص خودش را می‌سازد. اگر می‌خواهی اعلان جدید اضافه کنی، تابع پایه را تغییر نده، فقط یک wrapper جدید بساز.
 
-### ۸. رنگ/فونت برند — دیگر دست نزن مگر خواسته شود
+### ۹. رنگ/فونت برند — دیگر دست نزن مگر خواسته شود
 پالت در `templates/base.html` (تگ `<style>` بالای فایل): `primary` #0E5D50 (سبز زیتونی)، `accent` #C68A3D (طلایی)، `brick` #B6512E، `canvas` #FAF6EF، `ink` #1B2A2E، `line` #E4DDD0. فونت فقط **Vazirmatn** (فونت نستعلیق/Aref Ruqaa عمداً حذف شد، کاربر نخواستش).
 حالت تاریک از طریق CSS variables + کلاس `.dark` روی `<html>` پیاده‌سازی شده (نه `dark:` utility روی تک‌تک المان‌ها) — یعنی اکثر `bg-white`/`text-ink`/`border-line` خودکار دارک‌مود می‌گیرند بدون دست‌زدن به هر template.
 
@@ -105,7 +108,7 @@ python3 manage.py test
 2. **`make_test_image()`** (`apps/properties/tests.py`) یک PNG هاردکدشده با CRC نامعتبر داشت که باعث fail شدن `ImageField` در فرم‌ها می‌شد (نه باگ اپلیکیشن، فقط فیکسچر تست خراب بود). رفع شد: حالا با خود Pillow یک PNG واقعی می‌سازد.
 
 ## متغیرهای محیطی مهم (`.env`)
-`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `ADMIN_URL`, `DB_*`, `REDIS_URL`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `SITE_*`, `EMAIL_*` (برای فراموشی رمز واقعی). لیست کامل در `.env.example`.
+`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `ADMIN_URL`, `DB_*`, `REDIS_URL`, `RCLONE_REMOTE` (بک‌آپ ابری، اختیاری)، `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `SITE_*`, `EMAIL_*` (برای فراموشی رمز واقعی). لیست کامل در `.env.example`.
 
 تنظیمات سه‌لایه: `config/settings/base.py` (مشترک) → `development.py` (DEBUG=True, ایمیل کنسولی) → `production.py` (HSTS, لاگ فایل چرخشی، بررسی ALLOWED_HOSTS اجباری).
 
