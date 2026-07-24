@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 *.sqlite3
 .env
+CREDENTIALS_LOCAL.md
 venv/
 env/
 .venv-libs/
