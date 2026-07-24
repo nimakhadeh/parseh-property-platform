@@ -5,7 +5,10 @@
 """
 import random
 import logging
+from io import BytesIO
+
 import requests
+from PIL import Image
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -31,6 +34,16 @@ def download_image(url, filename, timeout=10):
     except requests.RequestException as exc:
         logger.warning("دانلود تصویر %s ناموفق بود: %s", url, exc)
         return None
+
+
+def placeholder_image(filename, size=(900, 600)):
+    """
+    وقتی دانلود تصویر واقعی ناموفق باشد (مثلاً بدون اینترنت)، یک تصویر ساده‌ی محلی می‌سازد.
+    برای فیلدهایی که image اجباری است (مثل Property) لازم است، چون بدون آن seed_data کرش می‌کند.
+    """
+    buffer = BytesIO()
+    Image.new("RGB", size, color=(226, 220, 208)).save(buffer, format="JPEG", quality=70)
+    return ContentFile(buffer.getvalue(), name=filename)
 
 
 ADVISORS = [
@@ -207,7 +220,7 @@ class Command(BaseCommand):
                 "is_featured": (i == 0),
             }
             image_file = download_image(f"https://picsum.photos/seed/{image_seed}/900/600", f"{image_seed}.jpg")
-            defaults["image"] = image_file or "properties/placeholder.jpg"
+            defaults["image"] = image_file or placeholder_image(f"{image_seed}.jpg")
             Property.objects.get_or_create(title=title, defaults=defaults)
             created_count += 1
 
@@ -238,7 +251,7 @@ class Command(BaseCommand):
                 "is_featured": (i == 0),
             }
             image_file = download_image(f"https://picsum.photos/seed/{image_seed}/900/600", f"{image_seed}.jpg")
-            defaults["image"] = image_file or "properties/placeholder.jpg"
+            defaults["image"] = image_file or placeholder_image(f"{image_seed}.jpg")
             Property.objects.get_or_create(title=title, defaults=defaults)
             created_count += 1
 
