@@ -1,5 +1,31 @@
 {
   "permissions": {
-    "allow": ["Bash(*)", "Read(*)", "Write(*)", "Edit(*)"]
+    "allow": [
+      "Bash(python manage.py test*)",
+      "Bash(python manage.py check*)",
+      "Bash(python manage.py makemigrations*)",
+      "Bash(python manage.py migrate*)",
+      "Bash(python manage.py shell*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git checkout -b*)",
+      "Read(*)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git merge*)",
+      "Bash(pip install*)",
+      "Bash(rm*)",
+      "Bash(python manage.py seed_data*)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Read(.env)",
+      "Read(*.pem)"
+    ]
   }
 }
