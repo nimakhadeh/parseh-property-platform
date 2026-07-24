@@ -11,6 +11,7 @@
             {% csrf_token %}
             {% for field in form %}
             <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ field.label }}</label>
                 {{ field }}
                 {% if field.errors %}
                 <p class="text-red-600 text-xs mt-1">{{ field.errors.0 }}</p>

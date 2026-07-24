@@ -27,10 +27,22 @@
                     <label for="website">وب‌سایت (خالی بگذارید)</label>
                     <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
                 </div>
-                {{ form.name }}
-                {{ form.phone }}
-                {{ form.email }}
-                {{ form.message }}
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.name.label }}</label>
+                    {{ form.name }}
+                </div>
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.phone.label }}</label>
+                    {{ form.phone }}
+                </div>
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.email.label }}</label>
+                    {{ form.email }}
+                </div>
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.message.label }}</label>
+                    {{ form.message }}
+                </div>
                 <button type="submit" class="btn-primary w-full">ارسال پیام</button>
             </form>
             <div id="contact-form-result" class="mt-4"></div>
