@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}درباره ما | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-5xl mx-auto px-4 py-14">
+    <h1 class="text-3xl font-bold font-display text-ink mb-4 text-center">درباره {{ SITE_NAME }}</h1>
+    <p class="text-ink/70 text-center max-w-2xl mx-auto mb-14 leading-7">
+        پلتفرم املاک پارسه با تکیه بر تیمی از مشاوران باتجربه و استفاده از تحلیل هوشمند بازار،
+        بهترین تجربه‌ی خرید، فروش و اجاره ملک را برای شما فراهم می‌کند.
+    </p>
+
+    <h2 class="text-2xl font-bold font-display text-ink mb-8 text-center">تیم ما</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {% for member in team_members %}
+        <a href="{% url 'team:advisor_detail' member.pk %}" class="block bg-white rounded-xl border border-line p-6 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            {% if member.image %}
+                <div class="relative w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 bg-primary-light">
+                    <img src="{{ member.image.url }}" onerror="handleImgError(this)" loading="lazy" class="w-full h-full object-cover">
+                    <div class="img-fallback rounded-full font-display font-bold text-2xl">
+                        {{ member.name|slice:":1" }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="w-24 h-24 rounded-full bg-primary-light mx-auto mb-4 flex items-center justify-center text-primary font-bold text-2xl font-display">
+                    {{ member.name|slice:":1" }}
+                </div>
+            {% endif %}
+            <h3 class="font-semibold text-ink">{{ member.name }}</h3>
+            <p class="text-sm text-ink/50 mb-2">{{ member.get_role_display }}</p>
+            <p class="text-sm text-ink/70 mb-3 line-clamp-2">{{ member.bio }}</p>
+            <span class="text-sm text-primary font-medium">مشاهده پروفایل و ملک‌ها ←</span>
+        </a>
+        {% empty %}
+        <p class="col-span-3 text-center text-ink/40">هنوز عضوی ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,95 @@
+name: استقرار خودکار پلتفرم املاک پارسه
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: اجرای تست‌ها
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: parseh_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: parseh_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      SECRET_KEY: ci-test-secret-key
+      DEBUG: "True"
+      DB_NAME: parseh_db
+      DB_USER: parseh_user
+      DB_PASSWORD: test_password
+      DB_HOST: localhost
+      DB_PORT: 5432
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - name: بررسی کد
+        uses: actions/checkout@v4
+
+      - name: نصب پایتون
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: نصب وابستگی‌های پروژه
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/development.txt
+
+      - name: بررسی مشکلات جنگو
+        run: python manage.py check
+
+      - name: اجرای مایگریشن‌ها (آزمایشی)
+        run: python manage.py migrate --noinput
+
+      - name: اجرای تست‌ها
+        run: python manage.py test
+
+  deploy:
+    name: استقرار روی سرور
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: بررسی کد
+        uses: actions/checkout@v4
+
+      - name: استقرار از طریق SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /opt/parseh_project
+            git pull origin main
+            source venv/bin/activate
+            pip install -r requirements/production.txt
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            sudo systemctl restart parseh
+            sudo systemctl restart parseh-celery
+            sudo systemctl restart parseh-celery-beat

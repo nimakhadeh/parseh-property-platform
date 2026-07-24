@@ -1,0 +1,45 @@
+{% if properties %}
+<div id="{{ map_id|default:'property-map' }}" class="w-full h-80 rounded-xl border border-line z-0" style="direction: ltr;"></div>
+<script>
+(function() {
+    var mapEl = document.getElementById("{{ map_id|default:'property-map' }}");
+    if (!mapEl || mapEl.dataset.initialized) return;
+    mapEl.dataset.initialized = "true";
+
+    var points = [
+        {% for property in properties %}
+        {
+            lat: {{ property.latitude|default:"0" }},
+            lng: {{ property.longitude|default:"0" }},
+            title: {{ property.title|escapejs|default:"" }},
+            price: {{ property.price_display|escapejs|default:"" }},
+            url: "{{ property.get_absolute_url }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    var map = L.map(mapEl, { scrollWheelZoom: false }).setView([points[0].lat, points[0].lng], points.length > 1 ? 12 : 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    var markerGroup = L.featureGroup();
+    points.forEach(function(p) {
+        var marker = L.marker([p.lat, p.lng]).bindPopup(
+            '<div style="direction:rtl;font-family:Vazirmatn,sans-serif;text-align:right;">' +
+            '<strong>' + p.title + '</strong><br>' +
+            '<span style="color:#2F5D50;font-weight:bold;">' + p.price + '</span><br>' +
+            '<a href="' + p.url + '" style="color:#2F5D50;">مشاهده جزئیات ←</a>' +
+            '</div>'
+        );
+        marker.addTo(map);
+        markerGroup.addLayer(marker);
+    });
+
+    if (points.length > 1) {
+        map.fitBounds(markerGroup.getBounds().pad(0.2));
+    }
+})();
+</script>
+{% endif %}

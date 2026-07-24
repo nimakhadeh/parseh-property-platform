@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}ثبت‌نام | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-14">
+    <div class="bg-white rounded-xl border border-line p-8">
+        <h1 class="text-2xl font-bold font-display text-ink mb-2 text-center">ساخت حساب کاربری</h1>
+        <p class="text-ink/50 text-sm text-center mb-8">با ثبت‌نام، علاقه‌مندی‌های خود را از هر دستگاهی ببینید.</p>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+            <div>
+                {{ field }}
+                {% if field.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% if form.non_field_errors %}
+            <p class="text-red-600 text-sm">{{ form.non_field_errors.0 }}</p>
+            {% endif %}
+            <button type="submit" class="btn-primary w-full">ثبت‌نام</button>
+        </form>
+
+        <p class="text-center text-sm text-ink/50 mt-6">
+            حساب کاربری دارید؟
+            <a href="{% url 'accounts:login' %}" class="text-primary font-medium hover:underline">وارد شوید</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

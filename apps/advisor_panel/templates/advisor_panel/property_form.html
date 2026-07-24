@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}ویرایش ملک{% else %}ملک جدید{% endif %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-3xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold font-display text-ink mb-8">
+        {% if object %}ویرایش ملک: {{ object.title }}{% else %}ثبت ملک جدید{% endif %}
+    </h1>
+
+    <form method="post" enctype="multipart/form-data" class="bg-white rounded-xl border border-line p-6 space-y-6">
+        {% csrf_token %}
+
+        <div>
+            <h2 class="font-semibold text-ink mb-3">اطلاعات اصلی</h2>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<p class="text-red-600 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}<p class="text-red-600 text-xs mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm text-ink/70 mb-1">{{ form.transaction_type.label }}</label>
+                        {{ form.transaction_type }}
+                    </div>
+                    <div>
+                        <label class="block text-sm text-ink/70 mb-1">{{ form.price.label }}</label>
+                        {{ form.price }}
+                        {% if form.price.errors %}<p class="text-red-600 text-xs mt-1">{{ form.price.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-line pt-6">
+            <h2 class="font-semibold text-ink mb-3">مشخصات فنی</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.area.label }}</label>{{ form.area }}</div>
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.rooms.label }}</label>{{ form.rooms }}</div>
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.floor.label }}</label>{{ form.floor }}</div>
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.total_floors.label }}</label>{{ form.total_floors }}</div>
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.year_built.label }}</label>{{ form.year_built }}</div>
+            </div>
+        </div>
+
+        <div class="border-t border-line pt-6">
+            <h2 class="font-semibold text-ink mb-3">امکانات</h2>
+            <div class="flex flex-wrap gap-4">
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_elevator }} آسانسور</label>
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_parking }} پارکینگ</label>
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_warehouse }} انباری</label>
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_balcony }} بالکن</label>
+            </div>
+        </div>
+
+        <div class="border-t border-line pt-6">
+            <h2 class="font-semibold text-ink mb-3">موقعیت مکانی</h2>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.address.label }}</label>
+                    {{ form.address }}
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-sm text-ink/70 mb-1">{{ form.latitude.label }}</label>{{ form.latitude }}</div>
+                    <div><label class="block text-sm text-ink/70 mb-1">{{ form.longitude.label }}</label>{{ form.longitude }}</div>
+                </div>
+                <p class="text-xs text-ink/40">مختصات را می‌توانید از Google Maps (کلیک راست روی نقطه مورد نظر) کپی کنید.</p>
+            </div>
+        </div>
+
+        <div class="border-t border-line pt-6">
+            <h2 class="font-semibold text-ink mb-3">تصاویر</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.image.label }} (الزامی)</label>
+                    {{ form.image }}
+                    {% if form.image.errors %}<p class="text-red-600 text-xs mt-1">{{ form.image.errors.0 }}</p>{% endif %}
+                </div>
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.image_2.label }}</label>{{ form.image_2 }}</div>
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.image_3.label }}</label>{{ form.image_3 }}</div>
+                <div><label class="block text-sm text-ink/70 mb-1">{{ form.image_4.label }}</label>{{ form.image_4 }}</div>
+            </div>
+        </div>
+
+        <div class="border-t border-line pt-6 flex flex-wrap gap-4">
+            <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.is_published }} منتشر شود</label>
+            <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.is_featured }} ملک ویژه</label>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+            <button type="submit" class="btn-primary">{% if object %}ذخیره تغییرات{% else %}ثبت ملک{% endif %}</button>
+            <a href="{% url 'advisor_panel:property_list' %}" class="btn-outline">انصراف</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

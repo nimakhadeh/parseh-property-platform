@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}درخواست‌های ارزیابی ملک | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-5xl mx-auto px-4 py-10">
+    {% include "advisor_panel/_nav.html" with active="valuation" %}
+    <h1 class="text-2xl font-bold font-display text-ink mb-8">درخواست‌های ارزیابی ملک</h1>
+
+    {% if valuation_requests %}
+    <div class="space-y-4">
+        {% for req in valuation_requests %}
+        <div class="bg-white rounded-xl border border-line p-5">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                <div>
+                    <span class="font-semibold text-ink">{{ req.name }}</span>
+                    <span class="text-ink/40 text-sm mr-2">{{ req.phone }}</span>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full
+                    {% if req.status == 'pending' %}bg-accent/10 text-accent
+                    {% elif req.status == 'reviewed' %}bg-primary-light text-primary
+                    {% elif req.status == 'contacted' %}bg-green-50 text-green-700
+                    {% else %}bg-gray-100 text-ink/50{% endif %}">
+                    {{ req.get_status_display }}
+                </span>
+            </div>
+            <p class="text-sm text-ink/60 mb-1">{{ req.get_transaction_type_display }} — {{ req.address }}</p>
+            {% if req.area or req.rooms %}
+            <p class="text-xs text-ink/40 mb-2">
+                {% if req.area %}{{ req.area }} متر{% endif %}
+                {% if req.rooms %} · {{ req.rooms }} اتاق{% endif %}
+            </p>
+            {% endif %}
+            {% if req.description %}
+            <p class="text-sm text-ink/70 mb-3">{{ req.description }}</p>
+            {% endif %}
+
+            {% if req.images %}
+            <div class="flex gap-2 mb-3">
+                {% for img in req.images %}
+                <img src="{{ img.url }}" loading="lazy" class="w-16 h-16 object-cover rounded-lg">
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-line">
+                <span class="text-xs text-ink/40">
+                    {{ req.created_at|date:"Y/m/d H:i" }}
+                    {% if req.assigned_advisor %} · مسئول پیگیری: {{ req.assigned_advisor.name }}{% endif %}
+                </span>
+                <div class="flex items-center gap-2">
+                    {% if not req.assigned_advisor %}
+                    <form method="post" action="{% url 'advisor_panel:claim_valuation_request' req.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary-dark transition">پیگیری با من</button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="{% url 'advisor_panel:update_valuation_status' req.pk %}" class="flex items-center gap-2">
+                        {% csrf_token %}
+                        <select name="status" onchange="this.form.submit()" class="text-xs border border-line rounded-full px-2 py-1.5">
+                            {% for value, label in req.STATUS_CHOICES %}
+                            <option value="{{ value }}" {% if value == req.status %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-outline text-sm">قبلی</a>{% endif %}
+        <span class="px-4 py-2 text-sm text-ink/60">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-outline text-sm">بعدی</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">درخواستی ثبت نشده است.</p>
+    {% endif %}
+</section>
+{% endblock %}

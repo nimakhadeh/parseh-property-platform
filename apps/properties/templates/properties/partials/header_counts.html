@@ -1,0 +1,16 @@
+<a href="{% url 'properties:favorites_list' %}" class="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-primary-light transition" title="علاقه‌مندی‌ها">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-ink/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+    </svg>
+    {% if favorites_count %}
+    <span class="absolute -top-1 -left-1 bg-accent text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">{{ favorites_count }}</span>
+    {% endif %}
+</a>
+{% if compare_count %}
+<a href="{% url 'properties:compare_view' %}" class="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-primary-light transition" title="مقایسه">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-ink/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v18M9 3l-4 4m4-4l4 4M15 21V3m0 18l4-4m-4 4l-4-4" />
+    </svg>
+    <span class="absolute -top-1 -left-1 bg-primary text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">{{ compare_count }}</span>
+</a>
+{% endif %}

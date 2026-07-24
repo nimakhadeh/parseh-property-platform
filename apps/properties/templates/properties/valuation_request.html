@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}ارزیابی رایگان ملک | {{ SITE_NAME }}{% endblock %}
+{% block description %}ملک خود را برای فروش یا اجاره به کارشناسان پارسه بسپارید و ارزیابی رایگان دریافت کنید.{% endblock %}
+
+{% block content %}
+<section class="bg-primary-light/40 py-14">
+    <div class="max-w-3xl mx-auto px-4 text-center">
+        <h1 class="text-3xl font-bold font-display text-ink mb-4">ارزیابی رایگان ملک شما</h1>
+        <p class="text-ink/60 leading-7">
+            آیا قصد فروش یا اجاره ملک خود را دارید؟ فرم زیر را پر کنید تا کارشناسان پارسه
+            در سریع‌ترین زمان ممکن با شما تماس بگیرند و قیمت پیشنهادی منصفانه‌ای ارائه دهند.
+        </p>
+    </div>
+</section>
+
+<section class="max-w-2xl mx-auto px-4 py-14">
+    <div class="bg-white rounded-xl border border-line p-6 sm:p-8">
+        <div id="valuation-result"></div>
+        <form id="valuation-form"
+              hx-post="{% url 'properties:valuation_request_submit' %}"
+              hx-target="#valuation-result"
+              hx-swap="innerHTML"
+              hx-on::after-request="if(event.detail.successful) this.reset()"
+              enctype="multipart/form-data"
+              class="space-y-4">
+            {% csrf_token %}
+
+            <!-- هانی‌پات ضداسپم -->
+            <div class="absolute -left-[9999px]" aria-hidden="true">
+                <label for="website3">وب‌سایت (خالی بگذارید)</label>
+                <input type="text" name="website" id="website3" tabindex="-1" autocomplete="off">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.name.label }}</label>
+                    {{ form.name }}
+                </div>
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.phone.label }}</label>
+                    {{ form.phone }}
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-ink/70 mb-1">{{ form.email.label }}</label>
+                {{ form.email }}
+            </div>
+            <div>
+                <label class="block text-sm text-ink/70 mb-1">{{ form.transaction_type.label }}</label>
+                {{ form.transaction_type }}
+            </div>
+            <div>
+                <label class="block text-sm text-ink/70 mb-1">{{ form.address.label }}</label>
+                {{ form.address }}
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.area.label }}</label>
+                    {{ form.area }}
+                </div>
+                <div>
+                    <label class="block text-sm text-ink/70 mb-1">{{ form.rooms.label }}</label>
+                    {{ form.rooms }}
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-ink/70 mb-1">{{ form.description.label }}</label>
+                {{ form.description }}
+            </div>
+            <div>
+                <label class="block text-sm text-ink/70 mb-1">تصاویر ملک (اختیاری، حداکثر ۳ تصویر)</label>
+                <div class="grid grid-cols-3 gap-3">
+                    {{ form.image }}
+                    {{ form.image_2 }}
+                    {{ form.image_3 }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary w-full">ثبت درخواست ارزیابی</button>
+            <p class="text-xs text-ink/40 text-center">اطلاعات شما محرمانه باقی می‌ماند و فقط برای تماس کارشناسان استفاده می‌شود.</p>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}تماس با ما | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-14">
+    <h1 class="text-3xl font-bold font-display text-ink mb-10 text-center">تماس با ما</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div>
+            <div class="bg-white rounded-xl border border-line p-6 mb-6 space-y-3">
+                <p class="text-ink/80"><strong>تلفن:</strong> {{ SITE_PHONE }}</p>
+                <p class="text-ink/80"><strong>ایمیل:</strong> {{ SITE_EMAIL }}</p>
+                <p class="text-ink/80"><strong>آدرس:</strong> {{ SITE_ADDRESS }}</p>
+            </div>
+            <div class="rounded-xl overflow-hidden border border-line">
+                <iframe
+                    src="https://maps.google.com/maps?q={{ SITE_ADDRESS|urlencode }}&output=embed"
+                    class="w-full h-72 border-0" loading="lazy"></iframe>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-line p-6">
+            <h2 class="font-semibold text-ink mb-4">فرم تماس</h2>
+            <form hx-post="{% url 'contact:contact_submit' %}" hx-target="#contact-form-result" hx-swap="innerHTML" class="space-y-4">
+                {% csrf_token %}
+                <div class="absolute -left-[9999px]" aria-hidden="true">
+                    <label for="website">وب‌سایت (خالی بگذارید)</label>
+                    <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+                </div>
+                {{ form.name }}
+                {{ form.phone }}
+                {{ form.email }}
+                {{ form.message }}
+                <button type="submit" class="btn-primary w-full">ارسال پیام</button>
+            </form>
+            <div id="contact-form-result" class="mt-4"></div>
+        </div>
+    </div>
+</section>
+{% endblock %}

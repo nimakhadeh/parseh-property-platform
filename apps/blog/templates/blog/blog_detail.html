@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} | {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ post.summary|truncatechars:150 }}{% endblock %}
+{% block og_title %}{{ post.title }}{% endblock %}
+{% block og_description %}{{ post.summary|truncatechars:150 }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_image %}{% if post.image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.image.url }}">{% endif %}{% endblock %}
+
+{% block content %}
+<article class="max-w-3xl mx-auto px-4 py-14">
+    {% if post.image %}
+    <div class="relative w-full h-80 rounded-xl overflow-hidden mb-8 bg-primary-light">
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" onerror="handleImgError(this)" loading="lazy"
+             class="w-full h-full object-cover">
+        <div class="img-fallback">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+        </div>
+    </div>
+    {% endif %}
+
+    <p class="text-sm text-ink/40 mb-2">{{ post.created_at|date:"Y/m/d" }} • {{ post.views_count }} بازدید</p>
+    <h1 class="text-3xl font-bold font-display text-ink mb-6">{{ post.title }}</h1>
+
+    <div class="prose prose-lg max-w-none text-ink/80 leading-8 whitespace-pre-line">
+        {{ post.content }}
+    </div>
+
+    {% if post.tag_list %}
+    <div class="flex flex-wrap gap-2 mt-8">
+        {% for tag in post.tag_list %}
+        <span class="bg-primary-light text-ink/70 text-xs px-3 py-1 rounded-full">#{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mt-10 flex items-center gap-3">
+        <span class="text-sm text-ink/50">اشتراک‌گذاری:</span>
+        <a href="https://wa.me/?text={{ post.title|urlencode }}%20{{ request.build_absolute_uri|urlencode }}"
+           target="_blank" rel="noopener" class="btn-outline text-xs">واتساپ</a>
+        <a href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ post.title|urlencode }}"
+           target="_blank" rel="noopener" class="btn-outline text-xs">تلگرام</a>
+    </div>
+</article>
+{% endblock %}

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ SITE_NAME|default:"پلتفرم املاک پارسه" }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}پلتفرم املاک پارسه - خرید، فروش و اجاره ملک با مشاوره تخصصی{% endblock %}">
+
+    <!-- Open Graph / شبکه‌های اجتماعی -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ SITE_NAME|default:'پلتفرم املاک پارسه' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}پلتفرم املاک پارسه - خرید، فروش و اجاره ملک با مشاوره تخصصی{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:locale" content="fa_IR">
+    {% block og_image %}{% endblock %}
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230E5D50'/%3E%3Cpath d='M50 20 L78 42 L78 80 L60 80 L60 58 L40 58 L40 80 L22 80 L22 42 Z' fill='%23FAF6EF'/%3E%3C/svg%3E">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- تشخیص و اعمال حالت تاریک پیش از رندر صفحه (جلوگیری از فلش نور هنگام لود) -->
+    <script>
+        (function () {
+            const saved = localStorage.getItem('parseh-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        vazir: ['Vazirmatn', 'sans-serif'],
+                        display: ['Vazirmatn', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: { DEFAULT: '#0E5D50', dark: '#0A3F37', light: 'rgb(var(--color-primary-light) / <alpha-value>)' },
+                        canvas: 'rgb(var(--color-canvas) / <alpha-value>)',
+                        ink: 'rgb(var(--color-ink) / <alpha-value>)',
+                        accent: { DEFAULT: '#C68A3D', dark: '#A8722E' },
+                        brick: { DEFAULT: '#B6512E', dark: '#8F3E22' },
+                        line: 'rgb(var(--color-line) / <alpha-value>)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* --- متغیرهای رنگی سازگار با حالت روشن/تاریک --- */
+        :root {
+            --color-canvas: 250 246 239;       /* #FAF6EF */
+            --color-ink: 27 42 46;             /* #1B2A2E */
+            --color-surface: 255 255 255;      /* پس‌زمینه کارت‌ها در حالت روشن */
+            --color-line: 228 221 208;         /* #E4DDD0 */
+            --color-primary-light: 232 242 239;/* #E8F2EF */
+        }
+        html.dark {
+            --color-canvas: 17 24 25;
+            --color-ink: 226 231 228;
+            --color-surface: 27 37 39;
+            --color-line: 42 55 57;
+            --color-primary-light: 16 40 36;
+            color-scheme: dark;
+        }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: rgb(var(--color-canvas)); color: rgb(var(--color-ink)); transition: background-color 0.3s ease, color 0.3s ease; }
+        .font-display { font-family: 'Vazirmatn', sans-serif; font-weight: 800; letter-spacing: -0.01em; }
+
+        /* پس‌زمینه سفید ثابت (کارت‌ها/فرم‌ها) در حالت تاریک به رنگ surface تیره تبدیل می‌شود */
+        .dark .bg-white { background-color: rgb(var(--color-surface)); }
+        .dark header.bg-white\/90 { background-color: rgb(var(--color-surface) / 0.9); }
+        .dark .bg-white\/95 { background-color: rgb(var(--color-surface) / 0.95); }
+
+        /* --- امضای بصری: الگوی هندسی الهام‌گرفته از قاب‌بندی سنتی --- */
+        .pattern-lattice {
+            background-image:
+                repeating-linear-gradient(45deg, rgba(198,138,61,0.10) 0, rgba(198,138,61,0.10) 1px, transparent 1px, transparent 20px),
+                repeating-linear-gradient(-45deg, rgba(198,138,61,0.10) 0, rgba(198,138,61,0.10) 1px, transparent 1px, transparent 20px);
+        }
+        .pattern-divider {
+            height: 16px;
+            background-image:
+                repeating-linear-gradient(45deg, rgba(250,246,239,0.9) 0, rgba(250,246,239,0.9) 1px, transparent 1px, transparent 12px),
+                repeating-linear-gradient(-45deg, rgba(250,246,239,0.9) 0, rgba(250,246,239,0.9) 1px, transparent 1px, transparent 12px);
+            background-color: #0E5D50;
+        }
+
+        .input-field {
+            width: 100%; padding: 0.65rem 1rem; border: 1px solid #E4DDD0;
+            border-radius: 0.5rem; outline: none; transition: 0.2s; background: #fff; color: #1B2A2E;
+        }
+        .input-field:focus { border-color: #0E5D50; box-shadow: 0 0 0 3px rgba(14,93,80,0.15); }
+        .btn-primary {
+            background: #0E5D50; color: #fff; padding: 0.65rem 1.5rem; border-radius: 0.5rem;
+            font-weight: 600; transition: 0.2s; display: inline-block;
+        }
+        .btn-primary:hover { background: #0A3F37; }
+        .btn-outline {
+            border: 2px solid #0E5D50; color: #0E5D50; padding: 0.6rem 1.5rem; border-radius: 0.5rem;
+            font-weight: 600; transition: 0.2s; display: inline-block;
+        }
+        .btn-outline:hover { background: #0E5D50; color: #fff; }
+
+        /* تصویر جایگزین برای عکس‌های گم‌شده (به‌جای آیکون شکسته مرورگر) */
+        .img-fallback {
+            display: none; width: 100%; height: 100%; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgb(var(--color-primary-light)) 0%, rgb(var(--color-canvas)) 100%);
+            color: #0E5D50;
+        }
+
+        /* نوار پیشرفت بالای صفحه برای درخواست‌های HTMX */
+        #htmx-progress-bar {
+            position: fixed; top: 0; right: 0; left: 0; height: 3px; z-index: 100;
+            background: #C68A3D; transform: scaleX(0); transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+        #htmx-progress-bar.active { transform: scaleX(1); }
+
+        /* دسترس‌پذیری: فوکوس قابل مشاهده با کیبورد */
+        a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+            outline: 2px solid #C68A3D; outline-offset: 2px; border-radius: 4px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+        }
+
+        /* انیمیشن ورود عناصر هنگام اسکرول (fade-in-up) */
+        .reveal {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .reveal.is-visible { opacity: 1; transform: translateY(0); }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal { opacity: 1; transform: none; transition: none; }
+        }
+
+        /* انیمیشن ورود برای بخش هیرو (بالای صفحه، بدون نیاز به اسکرول) */
+        .hero-fade {
+            opacity: 0; transform: translateY(16px);
+            animation: hero-fade-in 0.8s ease forwards;
+        }
+        @keyframes hero-fade-in {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .hero-fade { opacity: 1; transform: none; animation: none; }
+        }
+
+        /* اسکلتون لودینگ (به‌جای متن ساده «در حال بارگذاری») */
+        .skeleton {
+            background: linear-gradient(90deg, rgb(var(--color-primary-light)) 25%, rgb(var(--color-line)) 37%, rgb(var(--color-primary-light)) 63%);
+            background-size: 400% 100%;
+            animation: skeleton-shimmer 1.4s ease infinite;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="antialiased">
+    {% csrf_token %}
+
+    <script>
+        // ارسال خودکار توکن CSRF برای تمام درخواست‌های HTMX (POST/PUT/DELETE)
+        // بدون این، دکمه‌های لایک/مقایسه/تحلیل هوشمند و... توسط جنگو با خطای ۴۰۳ رد می‌شدند
+        function getCookie(name) {
+            const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = getCookie('csrftoken');
+        });
+    </script>
+    <div id="htmx-progress-bar"></div>
+
+    <!-- هدر -->
+    <header class="bg-white/90 backdrop-blur border-b border-line sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="{% url 'core:home' %}" class="flex items-center gap-2">
+                    <span class="text-2xl font-bold font-display text-primary">پارسه</span>
+                    <span class="hidden sm:inline text-xs text-ink/50">پلتفرم املاک</span>
+                </a>
+                <nav class="hidden md:flex items-center gap-8">
+                    <a href="{% url 'core:home' %}" class="text-ink/80 hover:text-primary font-medium transition">خانه</a>
+                    <a href="{% url 'properties:property_list' %}" class="text-ink/80 hover:text-primary font-medium transition">املاک</a>
+                    <a href="{% url 'blog:post_list' %}" class="text-ink/80 hover:text-primary font-medium transition">وبلاگ</a>
+                    <a href="{% url 'core:about' %}" class="text-ink/80 hover:text-primary font-medium transition">درباره ما</a>
+                    <a href="{% url 'core:faq' %}" class="text-ink/80 hover:text-primary font-medium transition">سوالات متداول</a>
+                    <a href="{% url 'contact:contact_page' %}" class="text-ink/80 hover:text-primary font-medium transition">تماس با ما</a>
+                </nav>
+                <div class="flex items-center gap-2">
+                    <button id="themeToggleBtn" aria-label="تغییر حالت روشن/تاریک"
+                            class="w-9 h-9 flex items-center justify-center rounded-lg text-ink/70 hover:bg-primary-light hover:text-primary transition">
+                        <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg id="themeIconMoon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+                    <div id="header-counts"
+                         hx-get="{% url 'properties:header_counts' %}"
+                         hx-trigger="load, favoritesUpdated from:body, compareUpdated from:body"
+                         hx-swap="innerHTML"
+                         class="flex items-center gap-1"></div>
+                    {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                    <a href="{% url 'core:reports' %}" class="hidden sm:inline-block text-sm text-ink/80 hover:text-primary font-medium transition">گزارش مدیریت</a>
+                    {% endif %}
+                    {% if user.is_staff or user.team_member %}
+                    <a href="{% url 'advisor_panel:dashboard' %}" class="hidden sm:inline-block text-sm text-ink/80 hover:text-primary font-medium transition">پنل مشاور</a>
+                    {% endif %}
+                    <a href="{% url 'accounts:profile' %}" class="hidden sm:flex items-center gap-1.5 text-sm text-ink/80 hover:text-primary font-medium transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {{ user.get_full_name|default:user.username|truncatechars:12 }}
+                    </a>
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}" class="hidden sm:inline-block text-sm text-ink/80 hover:text-primary font-medium transition">ورود</a>
+                    {% endif %}
+                    <a href="{% url 'contact:contact_page' %}" class="hidden sm:inline-block btn-primary text-sm">درخواست مشاوره</a>
+                    <button id="mobileMenuBtn" aria-label="باز کردن منو" aria-expanded="false"
+                            class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg text-ink hover:bg-primary-light transition">
+                        <svg id="mobileMenuIconOpen" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg id="mobileMenuIconClose" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- منوی موبایل (کشویی) -->
+        <nav id="mobileMenu" class="md:hidden hidden border-t border-line bg-white">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
+                <a href="{% url 'core:home' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">خانه</a>
+                <a href="{% url 'properties:property_list' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">املاک</a>
+                <a href="{% url 'blog:post_list' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">وبلاگ</a>
+                <a href="{% url 'core:about' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">درباره ما</a>
+                <a href="{% url 'core:faq' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">سوالات متداول</a>
+                <a href="{% url 'contact:contact_page' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">تماس با ما</a>
+                <div class="border-t border-line my-1"></div>
+                {% if user.is_authenticated %}
+                {% if user.is_staff %}
+                <a href="{% url 'core:reports' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">گزارش مدیریت</a>
+                {% endif %}
+                {% if user.is_staff or user.team_member %}
+                <a href="{% url 'advisor_panel:dashboard' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">پنل مشاور</a>
+                {% endif %}
+                <a href="{% url 'accounts:profile' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">پروفایل من ({{ user.get_full_name|default:user.username|truncatechars:12 }})</a>
+                <form method="post" action="{% url 'accounts:logout' %}" class="px-3">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-right py-1.5 text-ink/60 hover:text-red-600 font-medium transition">خروج از حساب</button>
+                </form>
+                {% else %}
+                <a href="{% url 'accounts:login' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">ورود</a>
+                <a href="{% url 'accounts:register' %}" class="px-3 py-2.5 rounded-lg text-ink/80 hover:bg-primary-light hover:text-primary font-medium transition">ثبت‌نام</a>
+                {% endif %}
+                <a href="{% url 'contact:contact_page' %}" class="mt-2 btn-primary text-sm text-center">درخواست مشاوره</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- محتوای اصلی -->
+    <main>
+        {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
+            {% for message in messages %}
+            <div class="rounded-lg px-4 py-3 text-sm {% if message.tags == 'success' %}bg-green-50 text-green-700{% elif message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-primary-light text-primary{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- جداکننده هندسی پیش از فوتر -->
+    <div class="pattern-divider"></div>
+
+    <!-- فوتر -->
+    <footer class="bg-primary text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-xl font-bold font-display mb-3">{{ SITE_NAME|default:"پلتفرم املاک پارسه" }}</h3>
+                <p class="text-sm text-white/75 leading-6">مشاوره تخصصی خرید، فروش و اجاره ملک با تحلیل هوشمند بازار.</p>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-3">دسترسی سریع</h4>
+                <ul class="space-y-2 text-sm text-white/75">
+                    <li><a href="{% url 'properties:property_list' %}" class="hover:text-accent transition">لیست املاک</a></li>
+                    <li><a href="{% url 'blog:post_list' %}" class="hover:text-accent transition">وبلاگ</a></li>
+                    <li><a href="{% url 'core:about' %}" class="hover:text-accent transition">درباره ما</a></li>
+                    <li><a href="{% url 'properties:valuation_request' %}" class="hover:text-accent transition">ارزیابی رایگان ملک</a></li>
+                    <li><a href="{% url 'core:faq' %}" class="hover:text-accent transition">سوالات متداول</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-3">اطلاعات تماس</h4>
+                <ul class="space-y-2 text-sm text-white/75">
+                    <li>تلفن: {{ SITE_PHONE|default:"021-00000000" }}</li>
+                    <li>ایمیل: {{ SITE_EMAIL|default:"info@parseh-estate.ir" }}</li>
+                    <li>آدرس: {{ SITE_ADDRESS|default:"تهران" }}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-white/10 text-center text-xs text-white/50 py-4">
+            © {% now "Y" %} تمامی حقوق برای {{ SITE_NAME|default:"پلتفرم املاک پارسه" }} محفوظ است.
+        </div>
+    </footer>
+
+    <!-- نوار شناور مقایسه ملک -->
+    <div id="compare-bar-container"
+         hx-get="{% url 'properties:compare_bar' %}"
+         hx-trigger="load, compareUpdated from:body"
+         hx-swap="innerHTML"></div>
+
+    <!-- دکمه شناور واتساپ -->
+    <a href="https://wa.me/{{ SITE_WHATSAPP }}" target="_blank" rel="noopener" aria-label="گفتگو در واتساپ"
+       class="fixed bottom-6 left-6 z-50 bg-green-500 hover:bg-green-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="w-7 h-7 fill-current">
+            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+        </svg>
+    </a>
+
+    <!-- دکمه برگشت به بالا -->
+    <button id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})" aria-label="برگشت به بالای صفحه"
+            class="fixed bottom-6 right-6 z-50 bg-primary text-white rounded-full w-12 h-12 items-center justify-center shadow-lg hidden hover:bg-primary-dark transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+        </svg>
+    </button>
+
+    <script>
+        // حالت روشن/تاریک
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIconSun = document.getElementById('themeIconSun');
+        const themeIconMoon = document.getElementById('themeIconMoon');
+
+        function syncThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            themeIconSun.classList.toggle('hidden', !isDark);
+            themeIconMoon.classList.toggle('hidden', isDark);
+        }
+        syncThemeIcon();
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('parseh-theme', isDark ? 'dark' : 'light');
+            syncThemeIcon();
+        });
+
+        // انیمیشن ورود عناصر هنگام اسکرول
+        const revealEls = document.querySelectorAll('.reveal');
+        if ('IntersectionObserver' in window && revealEls.length) {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            revealEls.forEach((el) => revealObserver.observe(el));
+        } else {
+            revealEls.forEach((el) => el.classList.add('is-visible'));
+        }
+
+        // اسکرول به بالا
+        const scrollBtn = document.getElementById('scrollTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollBtn.classList.remove('hidden');
+                scrollBtn.classList.add('flex');
+            } else {
+                scrollBtn.classList.add('hidden');
+                scrollBtn.classList.remove('flex');
+            }
+        });
+
+        // منوی موبایل
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const iconOpen = document.getElementById('mobileMenuIconOpen');
+        const iconClose = document.getElementById('mobileMenuIconClose');
+        mobileMenuBtn.addEventListener('click', () => {
+            const isHidden = mobileMenu.classList.toggle('hidden');
+            iconOpen.classList.toggle('hidden', !isHidden);
+            iconClose.classList.toggle('hidden', isHidden);
+            mobileMenuBtn.setAttribute('aria-expanded', String(!isHidden));
+        });
+        // بستن منو با کلیک روی هر لینک
+        mobileMenu.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                iconOpen.classList.remove('hidden');
+                iconClose.classList.add('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // نوار پیشرفت بالای صفحه هنگام درخواست‌های HTMX
+        const progressBar = document.getElementById('htmx-progress-bar');
+        document.body.addEventListener('htmx:beforeRequest', () => progressBar.classList.add('active'));
+        document.body.addEventListener('htmx:afterRequest', () => progressBar.classList.remove('active'));
+
+        // نمایش fallback برای عکس‌های گم‌شده
+        function handleImgError(img) {
+            img.style.display = 'none';
+            const fallback = img.nextElementSibling;
+            if (fallback && fallback.classList.contains('img-fallback')) {
+                fallback.style.display = 'flex';
+            }
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

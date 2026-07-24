@@ -1,0 +1,18 @@
+[Unit]
+Description=Celery Worker برای پلتفرم املاک پارسه
+After=network.target redis-server.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/parseh_project
+EnvironmentFile=/opt/parseh_project/.env
+ExecStart=/opt/parseh_project/venv/bin/celery -A config worker \
+    --loglevel=info \
+    --logfile=/opt/parseh_project/logs/celery-worker.log
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

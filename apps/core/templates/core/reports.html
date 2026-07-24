@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}گزارش‌گیری مدیر | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <h1 class="text-2xl font-bold font-display text-ink mb-8">داشبورد گزارش‌گیری</h1>
+
+    <!-- کارت‌های KPI -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">کل ملک‌ها</p>
+            <p class="text-2xl font-bold font-display text-ink">{{ total_properties }}</p>
+            <p class="text-xs text-ink/40 mt-1">{{ published_properties }} منتشرشده</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">مجموع بازدید ملک‌ها</p>
+            <p class="text-2xl font-bold font-display text-primary">{{ total_views }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">کاربران ثبت‌نامی</p>
+            <p class="text-2xl font-bold font-display text-ink">{{ total_users }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">درخواست‌های تماس</p>
+            <p class="text-2xl font-bold font-display text-accent">{{ total_contact_requests }}</p>
+            <p class="text-xs text-ink/40 mt-1">{{ unread_contact_requests }} نخوانده</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">ملک فروش</p>
+            <p class="text-xl font-bold text-ink">{{ sale_count }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">ملک اجاره</p>
+            <p class="text-xl font-bold text-ink">{{ rent_count }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">علاقه‌مندی ثبت‌شده</p>
+            <p class="text-xl font-bold text-ink">{{ total_favorites }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">مقالات / بازدید وبلاگ</p>
+            <p class="text-xl font-bold text-ink">{{ total_posts }} / {{ total_post_views }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        <!-- پربازدیدترین ملک‌ها -->
+        <div class="bg-white rounded-xl border border-line p-6">
+            <h2 class="font-semibold text-ink mb-4">پربازدیدترین ملک‌ها</h2>
+            {% if top_properties %}
+            <div class="space-y-3">
+                {% for property in top_properties %}
+                <div>
+                    <div class="flex items-center justify-between text-sm mb-1">
+                        <span class="text-ink/70 truncate">{{ property.title|truncatechars:28 }}</span>
+                        <span class="text-ink/50 shrink-0 mr-2">{{ property.views_count }}</span>
+                    </div>
+                    <div class="w-full h-2 bg-primary-light rounded-full overflow-hidden">
+                        <div class="h-full bg-primary rounded-full" style="width: {{ property.bar_percent }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-ink/40 text-sm text-center py-6">داده‌ای موجود نیست.</p>
+            {% endif %}
+        </div>
+
+        <!-- روند هفتگی درخواست تماس -->
+        <div class="bg-white rounded-xl border border-line p-6">
+            <h2 class="font-semibold text-ink mb-4">روند هفتگی درخواست‌های تماس (۸ هفته اخیر)</h2>
+            {% if weekly_requests %}
+            <div class="flex items-end gap-2 h-32">
+                {% for w in weekly_requests %}
+                <div class="flex-1 flex flex-col items-center justify-end gap-1">
+                    <div class="w-full bg-accent rounded-t" style="height: {{ w.bar_percent }}%; min-height: 4px;"></div>
+                    <span class="text-[10px] text-ink/40">{{ w.week|date:"m/d" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-ink/40 text-sm text-center py-6">در ۸ هفته اخیر درخواستی ثبت نشده است.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- روند ثبت‌نام کاربران -->
+    <div class="bg-white rounded-xl border border-line p-6 mb-10">
+        <h2 class="font-semibold text-ink mb-4">روند هفتگی عضویت کاربران (۸ هفته اخیر)</h2>
+        {% if weekly_signups %}
+        <div class="flex items-end gap-2 h-28">
+            {% for w in weekly_signups %}
+            <div class="flex-1 flex flex-col items-center justify-end gap-1">
+                <div class="w-full bg-primary rounded-t" style="height: {{ w.bar_percent }}%; min-height: 4px;"></div>
+                <span class="text-[10px] text-ink/40">{{ w.week|date:"m/d" }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-ink/40 text-sm text-center py-6">در ۸ هفته اخیر عضو جدیدی ثبت‌نام نکرده است.</p>
+        {% endif %}
+    </div>
+
+    <!-- عملکرد مشاوران -->
+    <div class="bg-white rounded-xl border border-line overflow-x-auto">
+        <h2 class="font-semibold text-ink p-6 pb-0">عملکرد مشاوران</h2>
+        <table class="w-full text-sm mt-4">
+            <thead>
+                <tr class="border-b border-line text-ink/50">
+                    <th class="p-4 text-right">مشاور</th>
+                    <th class="p-4 text-right">تعداد ملک</th>
+                    <th class="p-4 text-right">مجموع بازدید</th>
+                    <th class="p-4 text-right">درخواست نخوانده</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                {% for row in advisor_stats %}
+                <tr>
+                    <td class="p-4 text-ink">{{ row.advisor.name }}</td>
+                    <td class="p-4 text-ink/70">{{ row.property_count }}</td>
+                    <td class="p-4 text-ink/70">{{ row.views_sum }}</td>
+                    <td class="p-4">
+                        {% if row.unread_requests %}
+                        <span class="text-xs bg-accent/10 text-accent px-2 py-1 rounded-full">{{ row.unread_requests }}</span>
+                        {% else %}
+                        <span class="text-ink/30">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="p-6 text-center text-ink/40">مشاور فعالی ثبت نشده است.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

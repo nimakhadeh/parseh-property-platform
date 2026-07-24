@@ -1,0 +1,23 @@
+{% if rate_limited %}
+    <div class="bg-yellow-50 text-yellow-700 text-sm p-4 rounded-lg">
+        تعداد پیام‌های ارسالی شما در این ساعت به سقف مجاز رسیده. لطفاً کمی بعد دوباره تلاش کنید یا مستقیماً با ما تماس بگیرید.
+    </div>
+{% elif success %}
+    <div class="bg-green-50 text-green-700 text-sm p-4 rounded-lg">
+        پیام شما با موفقیت ارسال شد. کارشناسان ما به‌زودی با شما تماس خواهند گرفت.
+    </div>
+{% else %}
+    <div class="bg-red-50 text-red-700 text-sm p-4 rounded-lg">
+        <p class="mb-2 font-semibold">لطفاً خطاهای زیر را برطرف کنید:</p>
+        <ul class="list-disc pr-5 space-y-1">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}

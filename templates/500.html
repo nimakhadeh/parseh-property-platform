@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}خطای سرور | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="relative bg-primary overflow-hidden">
+    <div class="absolute inset-0 pattern-lattice opacity-40"></div>
+    <div class="relative max-w-2xl mx-auto px-4 text-center py-28">
+        <p class="font-display text-white/70 text-2xl mb-2">۵۰۰</p>
+        <h1 class="text-3xl md:text-4xl font-bold font-display text-white mb-4">خطایی در سرور رخ داد</h1>
+        <p class="text-white/80 mb-10">
+            متاسفانه مشکلی در سمت سرور پیش آمده. تیم فنی پارسه در حال بررسی موضوع است؛
+            لطفاً چند لحظه دیگر دوباره تلاش کنید.
+        </p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="{% url 'core:home' %}" class="bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-3 rounded-lg transition">بازگشت به خانه</a>
+            <a href="{% url 'contact:contact_page' %}" class="border-2 border-white/70 text-white hover:bg-white hover:text-primary font-semibold px-8 py-3 rounded-lg transition">گزارش مشکل</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

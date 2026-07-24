@@ -1,0 +1,12 @@
+Django==5.1.4
+psycopg2-binary==2.9.10
+Pillow==11.0.0
+django-redis==5.4.0
+redis==5.2.1
+celery==5.4.0
+openai==1.58.1
+whitenoise==6.8.2
+python-dotenv==1.0.1
+gunicorn==23.0.0
+django-ratelimit==4.1.0
+requests==2.32.3

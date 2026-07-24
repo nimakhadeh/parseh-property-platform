@@ -1,0 +1,9 @@
+<div class="flex items-center gap-1 mb-8 bg-white border border-line rounded-xl p-1.5 w-fit overflow-x-auto">
+    <a href="{% url 'advisor_panel:dashboard' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'dashboard' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">داشبورد</a>
+    <a href="{% url 'advisor_panel:property_list' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'properties' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">ملک‌های من</a>
+    <a href="{% url 'advisor_panel:contact_requests' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'contact_requests' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">درخواست‌های تماس</a>
+    <a href="{% url 'advisor_panel:valuation_queue' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'valuation' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">ارزیابی ملک</a>
+    {% if user.is_staff %}
+    <a href="{% url 'advisor_panel:manager_advisor_list' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'manage_advisors' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">مدیریت مشاوران</a>
+    {% endif %}
+</div>

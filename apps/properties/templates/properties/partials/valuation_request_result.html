@@ -1,0 +1,20 @@
+{% if rate_limited %}
+    <div class="bg-yellow-50 text-yellow-700 text-sm p-4 rounded-lg mb-4">
+        تعداد درخواست‌های شما در این ساعت به سقف مجاز رسیده. لطفاً کمی بعد دوباره تلاش کنید.
+    </div>
+{% elif success %}
+    <div class="bg-green-50 text-green-700 text-sm p-4 rounded-lg mb-4">
+        درخواست ارزیابی شما با موفقیت ثبت شد. کارشناسان پارسه به‌زودی با شما تماس خواهند گرفت. ✅
+    </div>
+{% elif form.errors %}
+    <div class="bg-red-50 text-red-700 text-sm p-4 rounded-lg mb-4">
+        <p class="mb-2 font-semibold">لطفاً خطاهای زیر را برطرف کنید:</p>
+        <ul class="list-disc pr-5 space-y-1">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}

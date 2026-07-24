@@ -1,0 +1,19 @@
+[Unit]
+Description=Gunicorn daemon برای پلتفرم املاک پارسه
+After=network.target postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/parseh_project
+RuntimeDirectory=parseh
+EnvironmentFile=/opt/parseh_project/.env
+ExecStart=/opt/parseh_project/venv/bin/gunicorn config.wsgi:application \
+    --config /opt/parseh_project/gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

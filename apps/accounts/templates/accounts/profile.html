@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load property_extras %}
+{% block title %}پروفایل من | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold font-display text-ink">سلام، {{ user.get_full_name|default:user.username }} 👋</h1>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'accounts:password_change' %}" class="text-sm text-primary hover:underline">تغییر رمز عبور</a>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="text-sm text-ink/50 hover:text-red-600 transition">خروج</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- ستون اصلی: علاقه‌مندی‌ها و بازدیدها -->
+        <div class="lg:col-span-2 space-y-8">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-semibold text-ink text-lg">علاقه‌مندی‌های من</h2>
+                    <a href="{% url 'properties:favorites_list' %}" class="text-sm text-primary hover:underline">مشاهده همه ←</a>
+                </div>
+                {% if favorites %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for fav in favorites|slice:":4" %}
+                        {% with property=fav.property %}
+                            {% include "properties/property_card.html" %}
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-6 text-center">هنوز ملکی به علاقه‌مندی‌ها اضافه نکرده‌اید.</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <h2 class="font-semibold text-ink text-lg mb-4">بازدیدهای اخیر</h2>
+                {% if recent_views %}
+                <div class="bg-white rounded-xl border border-line divide-y divide-line">
+                    {% for view in recent_views %}
+                    <a href="{{ view.property.get_absolute_url }}" class="flex items-center justify-between p-4 hover:bg-primary-light/40 transition">
+                        <span class="text-sm text-ink">{{ view.property.title }}</span>
+                        <span class="text-xs text-ink/40">{{ view.viewed_at|date:"Y/m/d H:i" }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-6 text-center">هنوز ملکی را مشاهده نکرده‌اید.</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <h2 class="font-semibold text-ink text-lg mb-4">درخواست‌های تماس من</h2>
+                {% if contact_requests %}
+                <div class="bg-white rounded-xl border border-line divide-y divide-line">
+                    {% for req in contact_requests %}
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-ink">{{ req.property.title|default:"درخواست عمومی" }}</span>
+                            <span class="text-xs {% if req.is_read %}text-green-600{% else %}text-accent{% endif %}">
+                                {% if req.is_read %}پاسخ داده شد{% else %}در انتظار بررسی{% endif %}
+                            </span>
+                        </div>
+                        <p class="text-xs text-ink/50">{{ req.message|truncatechars:80 }}</p>
+                        <p class="text-xs text-ink/30 mt-1">{{ req.created_at|date:"Y/m/d H:i" }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-6 text-center">هنوز درخواستی ثبت نکرده‌اید.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ستون کناری: ویرایش پروفایل -->
+        <div>
+            <div class="bg-white rounded-xl border border-line p-6 sticky top-20">
+                <h2 class="font-semibold text-ink text-lg mb-4">ویرایش پروفایل</h2>
+                <form method="post" class="space-y-3">
+                    {% csrf_token %}
+                    {% for field in user_form %}
+                        {{ field }}
+                        {% if field.errors %}<p class="text-red-600 text-xs">{{ field.errors.0 }}</p>{% endif %}
+                    {% endfor %}
+                    {% for field in profile_form %}
+                        {{ field }}
+                        {% if field.errors %}<p class="text-red-600 text-xs">{{ field.errors.0 }}</p>{% endif %}
+                    {% endfor %}
+                    <button type="submit" class="btn-primary w-full">ذخیره تغییرات</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

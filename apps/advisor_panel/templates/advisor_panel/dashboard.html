@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}پنل مشاور | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    {% include "advisor_panel/_nav.html" with active="dashboard" %}
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold font-display text-ink">
+            پنل مشاور{% if advisor %} — {{ advisor.name }}{% endif %}
+        </h1>
+        <div class="flex gap-3">
+            <a href="{% url 'advisor_panel:property_list' %}" class="btn-outline text-sm">لیست ملک‌ها</a>
+            <a href="{% url 'advisor_panel:property_create' %}" class="btn-primary text-sm">+ ملک جدید</a>
+        </div>
+    </div>
+
+    <!-- کارت‌های آماری -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">تعداد ملک‌ها</p>
+            <p class="text-2xl font-bold font-display text-ink">{{ total_properties }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">منتشرشده</p>
+            <p class="text-2xl font-bold font-display text-primary">{{ published_count }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-line p-5">
+            <p class="text-ink/50 text-sm mb-1">مجموع بازدید</p>
+            <p class="text-2xl font-bold font-display text-ink">{{ total_views }}</p>
+        </div>
+        <a href="{% url 'advisor_panel:contact_requests' %}" class="bg-white rounded-xl border border-line p-5 hover:shadow-md transition">
+            <p class="text-ink/50 text-sm mb-1">درخواست‌های نخوانده</p>
+            <p class="text-2xl font-bold font-display text-accent">{{ unread_requests_count }}</p>
+        </a>
+        <a href="{% url 'advisor_panel:valuation_queue' %}" class="bg-white rounded-xl border border-line p-5 hover:shadow-md transition">
+            <p class="text-ink/50 text-sm mb-1">ارزیابی در انتظار</p>
+            <p class="text-2xl font-bold font-display text-accent">{{ pending_valuation_count }}</p>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- پربازدیدترین ملک‌ها -->
+        <div>
+            <h2 class="font-semibold text-ink text-lg mb-4">پربازدیدترین ملک‌های شما</h2>
+            {% if top_properties %}
+            <div class="bg-white rounded-xl border border-line divide-y divide-line">
+                {% for property in top_properties %}
+                <div class="flex items-center justify-between p-4">
+                    <a href="{% url 'advisor_panel:property_edit' property.pk %}" class="text-sm text-ink hover:text-primary transition">{{ property.title|truncatechars:35 }}</a>
+                    <span class="text-xs text-ink/50 bg-primary-light px-2 py-1 rounded-full">{{ property.views_count }} بازدید</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-6 text-center">هنوز ملکی ثبت نکرده‌اید.</p>
+            {% endif %}
+        </div>
+
+        <!-- آخرین درخواست‌های تماس -->
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-ink text-lg">آخرین درخواست‌های تماس</h2>
+                <a href="{% url 'advisor_panel:contact_requests' %}" class="text-sm text-primary hover:underline">مشاهده همه ←</a>
+            </div>
+            {% if recent_requests %}
+            <div class="bg-white rounded-xl border border-line divide-y divide-line">
+                {% for req in recent_requests %}
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-sm font-medium text-ink">{{ req.name }}</span>
+                        {% if not req.is_read %}<span class="text-xs bg-accent text-white px-2 py-0.5 rounded-full">جدید</span>{% endif %}
+                    </div>
+                    <p class="text-xs text-ink/50">{{ req.property.title|default:"درخواست عمومی"|truncatechars:35 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-6 text-center">درخواستی ثبت نشده است.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

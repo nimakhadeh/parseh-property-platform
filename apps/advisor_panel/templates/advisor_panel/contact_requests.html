@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}درخواست‌های تماس | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-4 py-10">
+    {% include "advisor_panel/_nav.html" with active="contact_requests" %}
+    <h1 class="text-2xl font-bold font-display text-ink mb-8">درخواست‌های تماس</h1>
+
+    {% if requests %}
+    <div class="bg-white rounded-xl border border-line divide-y divide-line">
+        {% for req in requests %}
+        <div class="p-5 {% if not req.is_read %}bg-primary-light/30{% endif %}">
+            <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <div>
+                    <span class="font-semibold text-ink">{{ req.name }}</span>
+                    <span class="text-ink/40 text-sm mr-2">{{ req.phone }}</span>
+                </div>
+                {% if not req.is_read %}
+                <form method="post" action="{% url 'advisor_panel:mark_request_read' req.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-xs bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary-dark transition">علامت‌گذاری به‌عنوان خوانده‌شده</button>
+                </form>
+                {% else %}
+                <span class="text-xs text-green-600">✓ خوانده شده</span>
+                {% endif %}
+            </div>
+            {% if req.property %}
+            <p class="text-sm text-ink/60 mb-1">ملک مرتبط: <a href="{{ req.property.get_absolute_url }}" class="text-primary hover:underline">{{ req.property.title }}</a></p>
+            {% endif %}
+            <p class="text-sm text-ink/70">{{ req.message }}</p>
+            <p class="text-xs text-ink/30 mt-2">{{ req.created_at|date:"Y/m/d H:i" }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-outline text-sm">قبلی</a>{% endif %}
+        <span class="px-4 py-2 text-sm text-ink/60">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-outline text-sm">بعدی</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">درخواستی ثبت نشده است.</p>
+    {% endif %}
+</section>
+{% endblock %}

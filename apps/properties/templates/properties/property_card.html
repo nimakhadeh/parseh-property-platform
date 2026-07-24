@@ -1,0 +1,74 @@
+{% load property_extras %}
+<div class="relative bg-white rounded-2xl border border-line overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group">
+    <a href="{{ property.get_absolute_url }}" class="absolute inset-0 z-10" aria-label="{{ property.title }}"></a>
+
+    <div class="relative h-56 overflow-hidden bg-primary-light">
+        {% if property.image %}
+            <img src="{{ property.image.url }}" alt="{{ property.title }}" onerror="handleImgError(this)" loading="lazy"
+                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+            <div class="img-fallback">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </div>
+        {% else %}
+            <div class="w-full h-full flex items-center justify-center text-primary/40">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </div>
+        {% endif %}
+
+        <!-- گرادیانت پایین عکس برای خوانایی متن روی تصویر -->
+        <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none"></div>
+
+        <!-- بج‌های بالای عکس -->
+        <span class="absolute top-3 right-3 z-20 bg-primary/90 backdrop-blur text-white text-xs px-3 py-1 rounded-full shadow-sm">
+            {{ property.get_transaction_type_display }}
+        </span>
+        {% if property.is_featured %}
+        <span class="absolute top-3 left-3 z-20 bg-accent/90 backdrop-blur text-white text-xs px-3 py-1 rounded-full font-semibold shadow-sm flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.956a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.363 1.118l1.287 3.956c.3.922-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.196-1.539-1.118l1.286-3.956a1 1 0 00-.363-1.118L2.983 9.383c-.783-.57-.38-1.81.588-1.81h4.163a1 1 0 00.95-.69l1.285-3.956z"/></svg>
+            ویژه
+        </span>
+        {% endif %}
+
+        <!-- دکمه‌های علاقه‌مندی و مقایسه -->
+        <div class="absolute bottom-3 left-3 z-20 flex items-center gap-2">
+            {% include "properties/partials/favorite_button.html" with is_favorite=property.pk|in_list:favorite_ids %}
+            {% include "properties/partials/compare_button.html" with is_comparing=property.pk|in_list:compare_ids is_full=compare_ids|is_list_full %}
+        </div>
+
+        <!-- بج قیمت روی عکس -->
+        <div class="absolute bottom-3 right-3 z-20">
+            <span class="bg-white/95 backdrop-blur text-primary font-bold text-sm px-3 py-1.5 rounded-lg shadow-md">
+                {{ property.price_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="p-4">
+        <h3 class="font-semibold text-ink mb-1 truncate group-hover:text-primary transition-colors">{{ property.title }}</h3>
+        <p class="text-sm text-ink/50 mb-3 truncate flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {{ property.address }}
+        </p>
+        <div class="flex items-center gap-4 text-sm text-ink/60 border-t border-line pt-3">
+            <span class="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                {{ property.area }} متر
+            </span>
+            <span class="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-ink/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a1 1 0 001 1h16a1 1 0 001-1V10a1 1 0 00-1-1h-9V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                {{ property.rooms }} خواب
+            </span>
+        </div>
+    </div>
+</div>

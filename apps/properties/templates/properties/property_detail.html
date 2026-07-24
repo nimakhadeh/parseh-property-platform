@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load property_extras %}
+{% block title %}{{ property.title }} | {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ property.description|truncatechars:150 }}{% endblock %}
+{% block og_title %}{{ property.title }}{% endblock %}
+{% block og_description %}{{ property.description|truncatechars:150 }}{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_image %}{% if property.image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ property.image.url }}">{% endif %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <div class="lg:col-span-2">
+            <!-- گالری تصاویر -->
+            <div class="bg-white rounded-xl border border-line overflow-hidden mb-6">
+                <div class="relative w-full h-96 bg-primary-light">
+                    <img id="mainImage" src="{{ property.image.url }}" alt="{{ property.title }}" onerror="handleImgError(this)" class="w-full h-full object-cover">
+                    <div class="img-fallback">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                    </div>
+                </div>
+                {% if property.images|length > 1 %}
+                <div class="flex gap-2 p-3 overflow-x-auto">
+                    {% for img in property.images %}
+                    <img src="{{ img.url }}" onerror="this.style.opacity=0.15" loading="lazy" onclick="document.getElementById('mainImage').src=this.src"
+                         class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-primary transition">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="bg-white rounded-xl border border-line p-6 mb-6">
+                <div class="flex items-center justify-between mb-2 gap-3">
+                    <h1 class="text-2xl font-bold font-display text-ink">{{ property.title }}</h1>
+                    <div class="flex items-center gap-2 shrink-0">
+                        {% include "properties/partials/favorite_button.html" with is_favorite=property.pk|in_list:favorite_ids %}
+                        {% include "properties/partials/compare_button.html" with is_comparing=property.pk|in_list:compare_ids is_full=compare_ids|is_list_full %}
+                        <span class="bg-primary-light text-primary text-sm px-3 py-1 rounded-full whitespace-nowrap">{{ property.get_transaction_type_display }}</span>
+                    </div>
+                </div>
+                <p class="text-ink/50 mb-4">{{ property.address }}</p>
+                <p class="text-primary font-extrabold text-2xl mb-6">{{ property.price_display }}</p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center mb-6">
+                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">متراژ</p><p class="font-semibold">{{ property.area }} متر</p></div>
+                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">اتاق</p><p class="font-semibold">{{ property.rooms }}</p></div>
+                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">طبقه</p><p class="font-semibold">{{ property.floor }} از {{ property.total_floors }}</p></div>
+                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">سال ساخت</p><p class="font-semibold">{{ property.year_built|default:"-" }}</p></div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-6">
+                    {% if property.has_elevator %}<span class="bg-primary-light text-ink/80 text-xs px-3 py-1 rounded-full">آسانسور</span>{% endif %}
+                    {% if property.has_parking %}<span class="bg-primary-light text-ink/80 text-xs px-3 py-1 rounded-full">پارکینگ</span>{% endif %}
+                    {% if property.has_warehouse %}<span class="bg-primary-light text-ink/80 text-xs px-3 py-1 rounded-full">انباری</span>{% endif %}
+                    {% if property.has_balcony %}<span class="bg-primary-light text-ink/80 text-xs px-3 py-1 rounded-full">بالکن</span>{% endif %}
+                </div>
+
+                <h2 class="font-semibold text-ink mb-2">توضیحات</h2>
+                <p class="text-ink/70 leading-7 whitespace-pre-line">{{ property.description }}</p>
+            </div>
+
+            {% if property.latitude and property.longitude %}
+            <div class="bg-white rounded-xl border border-line p-6 mb-6">
+                <h2 class="font-semibold text-ink text-lg mb-4">موقعیت روی نقشه</h2>
+                {% include "properties/partials/map.html" with properties=property|as_list map_id="detail-map" %}
+            </div>
+            {% endif %}
+
+            <!-- تحلیل هوشمند AI -->
+            <div class="bg-white rounded-xl border border-line p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-semibold text-ink text-lg">تحلیل هوشمند ملک</h2>
+                    <button
+                        hx-post="{% url 'ai:analyze_property' property.slug %}"
+                        hx-target="#ai-result"
+                        hx-swap="innerHTML"
+                        hx-indicator="#ai-loading"
+                        class="btn-primary text-sm">
+                        شروع تحلیل هوشمند
+                    </button>
+                </div>
+                <div id="ai-loading" class="htmx-indicator space-y-3 mb-3">
+                    <div class="flex items-center gap-2 text-sm text-primary font-medium mb-2">
+                        <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        در حال تحلیل با هوش مصنوعی...
+                    </div>
+                    <div class="h-3 skeleton rounded w-full"></div>
+                    <div class="h-3 skeleton rounded w-5/6"></div>
+                    <div class="h-3 skeleton rounded w-2/3"></div>
+                </div>
+                <div id="ai-result"></div>
+            </div>
+        </div>
+
+        <!-- ستون کناری: مشاور + فرم بازدید -->
+        <div class="space-y-6">
+            {% if property.advisor %}
+            <div class="bg-white rounded-xl border border-line p-6 text-center">
+                {% if property.advisor.image %}
+                    <div class="relative w-20 h-20 rounded-full overflow-hidden mx-auto mb-3 bg-primary-light">
+                        <img src="{{ property.advisor.image.url }}" onerror="handleImgError(this)" loading="lazy"
+                             class="w-full h-full object-cover">
+                        <div class="img-fallback rounded-full font-display font-bold text-lg">
+                            {{ property.advisor.name|slice:":1" }}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="w-20 h-20 rounded-full bg-primary-light mx-auto mb-3 flex items-center justify-center text-primary font-bold text-lg font-display">
+                        {{ property.advisor.name|slice:":1" }}
+                    </div>
+                {% endif %}
+                <h3 class="font-semibold text-ink">{{ property.advisor.name }}</h3>
+                <p class="text-sm text-ink/50 mb-3">{{ property.advisor.get_role_display }}</p>
+                <p class="text-sm text-ink/70">{{ property.advisor.phone }}</p>
+            </div>
+            {% endif %}
+
+            <div class="bg-white rounded-xl border border-line p-6">
+                <h3 class="font-semibold text-ink mb-4">درخواست بازدید از ملک</h3>
+                <form hx-post="{% url 'contact:contact_submit' %}" hx-target="#visit-form-result" hx-swap="innerHTML" class="space-y-3">
+                    {% csrf_token %}
+                    <div class="absolute -left-[9999px]" aria-hidden="true">
+                        <label for="website2">وب‌سایت (خالی بگذارید)</label>
+                        <input type="text" name="website" id="website2" tabindex="-1" autocomplete="off">
+                    </div>
+                    <input type="hidden" name="property" value="{{ property.id }}">
+                    <input type="text" name="name" placeholder="نام و نام خانوادگی" class="input-field" required>
+                    <input type="text" name="phone" placeholder="شماره تماس" class="input-field" required>
+                    <textarea name="message" rows="3" placeholder="توضیحات (اختیاری)" class="input-field"></textarea>
+                    <button type="submit" class="btn-primary w-full">ارسال درخواست</button>
+                </form>
+                <div id="visit-form-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- املاک مرتبط -->
+    {% if related_properties %}
+    <div class="mt-14">
+        <h2 class="text-xl font-bold text-ink mb-6">املاک مشابه</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for property in related_properties %}
+                {% include "properties/property_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

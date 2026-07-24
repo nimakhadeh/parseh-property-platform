@@ -1,0 +1,12 @@
+<button
+    hx-post="{% url 'properties:toggle_compare' property.pk %}"
+    hx-target="this"
+    hx-swap="outerHTML"
+    onclick="event.stopPropagation(); event.preventDefault();"
+    class="w-10 h-10 rounded-full flex items-center justify-center transition {% if is_comparing %}bg-primary text-white{% elif is_full %}bg-line text-ink/30 cursor-not-allowed{% else %}bg-primary-light text-ink/60 hover:text-primary{% endif %}"
+    title="{% if is_comparing %}حذف از مقایسه{% elif is_full %}حداکثر ۳ ملک قابل مقایسه است{% else %}افزودن به مقایسه{% endif %}"
+    aria-label="مقایسه">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v18M9 3l-4 4m4-4l4 4M15 21V3m0 18l4-4m-4 4l-4-4" />
+    </svg>
+</button>

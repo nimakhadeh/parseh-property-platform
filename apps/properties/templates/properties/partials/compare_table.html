@@ -1,0 +1,82 @@
+{% if properties %}
+        <div class="flex justify-end mb-4">
+            <button hx-post="{% url 'properties:clear_compare' %}" hx-target="#compare-content" hx-swap="innerHTML"
+                    class="text-sm text-ink/50 hover:text-red-600 transition">پاک کردن همه</button>
+        </div>
+        <div class="overflow-x-auto bg-white rounded-xl border border-line">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-line">
+                        <th class="p-4 text-right text-ink/50 font-medium w-40">ویژگی</th>
+                        {% for property in properties %}
+                        <th class="p-4 text-right min-w-[220px]">
+                            <a href="{{ property.get_absolute_url }}" class="block hover:text-primary transition">
+                                <div class="h-32 rounded-lg overflow-hidden bg-primary-light mb-2 relative">
+                                    {% if property.image %}
+                                        <img src="{{ property.image.url }}" onerror="handleImgError(this)" loading="lazy" class="w-full h-full object-cover">
+                                        <div class="img-fallback"></div>
+                                    {% endif %}
+                                </div>
+                                <span class="font-semibold text-ink">{{ property.title|truncatechars:30 }}</span>
+                            </a>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    <tr>
+                        <td class="p-4 text-ink/50">نوع معامله</td>
+                        {% for property in properties %}<td class="p-4">{{ property.get_transaction_type_display }}</td>{% endfor %}
+                    </tr>
+                    <tr class="bg-primary-light/40">
+                        <td class="p-4 text-ink/50">قیمت</td>
+                        {% for property in properties %}<td class="p-4 font-bold text-primary">{{ property.price_display }}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="p-4 text-ink/50">متراژ</td>
+                        {% for property in properties %}<td class="p-4">{{ property.area }} متر</td>{% endfor %}
+                    </tr>
+                    <tr class="bg-primary-light/40">
+                        <td class="p-4 text-ink/50">تعداد اتاق</td>
+                        {% for property in properties %}<td class="p-4">{{ property.rooms }}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="p-4 text-ink/50">طبقه</td>
+                        {% for property in properties %}<td class="p-4">{{ property.floor }} از {{ property.total_floors }}</td>{% endfor %}
+                    </tr>
+                    <tr class="bg-primary-light/40">
+                        <td class="p-4 text-ink/50">سال ساخت</td>
+                        {% for property in properties %}<td class="p-4">{{ property.year_built|default:"-" }}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="p-4 text-ink/50">آسانسور</td>
+                        {% for property in properties %}<td class="p-4">{% if property.has_elevator %}✅{% else %}—{% endif %}</td>{% endfor %}
+                    </tr>
+                    <tr class="bg-primary-light/40">
+                        <td class="p-4 text-ink/50">پارکینگ</td>
+                        {% for property in properties %}<td class="p-4">{% if property.has_parking %}✅{% else %}—{% endif %}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="p-4 text-ink/50">انباری</td>
+                        {% for property in properties %}<td class="p-4">{% if property.has_warehouse %}✅{% else %}—{% endif %}</td>{% endfor %}
+                    </tr>
+                    <tr class="bg-primary-light/40">
+                        <td class="p-4 text-ink/50">بالکن</td>
+                        {% for property in properties %}<td class="p-4">{% if property.has_balcony %}✅{% else %}—{% endif %}</td>{% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="p-4 text-ink/50">مشاور</td>
+                        {% for property in properties %}<td class="p-4">{{ property.advisor.name|default:"-" }}</td>{% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-ink/20 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v18M9 3l-4 4m4-4l4 4M15 21V3m0 18l4-4m-4 4l-4-4" />
+            </svg>
+            <p class="text-ink/50 mb-6">هنوز ملکی برای مقایسه انتخاب نکرده‌اید. از لیست املاک، تا ۳ مورد را برای مقایسه انتخاب کنید.</p>
+            <a href="{% url 'properties:property_list' %}" class="btn-primary">مشاهده املاک</a>
+        </div>
+        {% endif %}

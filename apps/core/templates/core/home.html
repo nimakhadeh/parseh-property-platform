@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ SITE_NAME }} | خانه{% endblock %}
+
+{% block content %}
+<!-- بخش معرفی (هیرو) -->
+<section class="relative bg-primary overflow-hidden">
+    <div id="heroPattern" class="absolute inset-0 pattern-lattice opacity-40"></div>
+    <div class="relative max-w-5xl mx-auto px-4 text-center py-24">
+        <h1 class="hero-fade text-4xl md:text-6xl font-bold font-display text-white mb-5 leading-tight" style="animation-delay: 0ms;">
+            ملک رویایی خود را با پارسه پیدا کنید
+        </h1>
+        <p class="hero-fade text-white/80 text-lg mb-10 max-w-2xl mx-auto" style="animation-delay: 120ms;">
+            مشاوره تخصصی، تحلیل هوشمند بازار و بهترین گزینه‌های خرید، فروش و اجاره ملک
+        </p>
+        <div class="hero-fade flex flex-wrap justify-center gap-4" style="animation-delay: 240ms;">
+            <a href="{% url 'properties:property_list' %}?type=sale" class="bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-3 rounded-lg transition text-lg">مشاهده املاک فروش</a>
+            <a href="{% url 'properties:property_list' %}?type=rent" class="border-2 border-white/70 text-white hover:bg-white hover:text-primary font-semibold px-8 py-3 rounded-lg transition text-lg">مشاهده املاک اجاره</a>
+        </div>
+    </div>
+</section>
+<div class="pattern-divider"></div>
+
+<!-- مشاوران برتر -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <h2 class="reveal text-2xl md:text-3xl font-bold font-display text-ink mb-10 text-center">مشاوران برتر ما</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {% for member in team_members %}
+        <a href="{% url 'team:advisor_detail' member.pk %}" class="reveal block bg-white rounded-xl border border-line p-5 text-center hover:shadow-lg hover:-translate-y-0.5 transition-all" style="transition-delay: {% widthratio forloop.counter0 1 80 %}ms;">
+            {% if member.image %}
+                <div class="relative w-20 h-20 rounded-full overflow-hidden mx-auto mb-3 bg-primary-light">
+                    <img src="{{ member.image.url }}" alt="{{ member.name }}" onerror="handleImgError(this)" loading="lazy" class="w-full h-full object-cover">
+                    <div class="img-fallback rounded-full font-display font-bold text-xl">{{ member.name|slice:":1" }}</div>
+                </div>
+            {% else %}
+                <div class="w-20 h-20 rounded-full bg-primary-light mx-auto mb-3 flex items-center justify-center text-primary font-bold text-xl font-display">
+                    {{ member.name|slice:":1" }}
+                </div>
+            {% endif %}
+            <h3 class="font-semibold text-ink">{{ member.name }}</h3>
+            <p class="text-sm text-ink/50">{{ member.get_role_display }}</p>
+        </a>
+        {% empty %}
+        <p class="col-span-4 text-center text-ink/40 py-8">هنوز مشاوری ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- املاک فروش -->
+<section class="bg-white border-y border-line">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="reveal flex items-center justify-between mb-10">
+            <h2 class="text-2xl md:text-3xl font-bold font-display text-ink">املاک فروش</h2>
+            <a href="{% url 'properties:property_list' %}?type=sale" class="text-primary font-medium hover:underline whitespace-nowrap">مشاهده همه ←</a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for property in sale_properties %}
+                <div class="reveal" style="transition-delay: {% widthratio forloop.counter0 1 80 %}ms;">
+                    {% include "properties/property_card.html" %}
+                </div>
+            {% empty %}
+            <p class="col-span-3 text-center text-ink/40 py-8">فعلاً ملکی برای فروش ثبت نشده است.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- املاک اجاره -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="reveal flex items-center justify-between mb-10">
+        <h2 class="text-2xl md:text-3xl font-bold font-display text-ink">املاک اجاره</h2>
+        <a href="{% url 'properties:property_list' %}?type=rent" class="text-primary font-medium hover:underline whitespace-nowrap">مشاهده همه ←</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for property in rent_properties %}
+            <div class="reveal" style="transition-delay: {% widthratio forloop.counter0 1 80 %}ms;">
+                {% include "properties/property_card.html" %}
+            </div>
+        {% empty %}
+        <p class="col-span-3 text-center text-ink/40 py-8">فعلاً ملکی برای اجاره ثبت نشده است.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- رزرو مشاوره -->
+<section class="relative bg-brick overflow-hidden">
+    <div class="absolute inset-0 pattern-lattice opacity-20"></div>
+    <div class="reveal relative max-w-3xl mx-auto px-4 text-center py-16">
+        <h2 class="text-2xl md:text-3xl font-bold font-display text-white mb-3">نیاز به مشاوره تخصصی دارید؟</h2>
+        <p class="text-white/85 mb-8">همین حالا با مشاوران پارسه در ارتباط باشید و بهترین تصمیم را برای سرمایه‌گذاری خود بگیرید.</p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="{% url 'contact:contact_page' %}" class="bg-white text-brick font-bold px-8 py-3 rounded-lg inline-block hover:bg-canvas transition">رزرو مشاوره رایگان</a>
+            <a href="{% url 'properties:valuation_request' %}" class="border-2 border-white text-white font-bold px-8 py-3 rounded-lg inline-block hover:bg-white hover:text-brick transition">ارزیابی رایگان ملک من</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // پارالاکس ملایم برای الگوی تزئینی هیرو
+    (function () {
+        const heroPattern = document.getElementById('heroPattern');
+        if (!heroPattern || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const offset = Math.min(window.scrollY * 0.15, 60);
+                    heroPattern.style.transform = `translateY(${offset}px)`;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+    })();
+</script>
+{% endblock %}

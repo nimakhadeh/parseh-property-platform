@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}مدیریت مشاوران | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    {% include "advisor_panel/_nav.html" with active="manage_advisors" %}
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold font-display text-ink">مدیریت مشاوران</h1>
+        <a href="{% url 'advisor_panel:manager_advisor_create' %}" class="btn-primary text-sm">+ مشاور جدید</a>
+    </div>
+
+    {% if advisors %}
+    <div class="bg-white rounded-xl border border-line overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-line text-ink/50">
+                    <th class="p-4 text-right">نام</th>
+                    <th class="p-4 text-right">سمت</th>
+                    <th class="p-4 text-right">تلفن</th>
+                    <th class="p-4 text-right">حساب متصل</th>
+                    <th class="p-4 text-right">تعداد ملک</th>
+                    <th class="p-4 text-right">وضعیت</th>
+                    <th class="p-4 text-right">عملیات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                {% for advisor in advisors %}
+                <tr>
+                    <td class="p-4 text-ink font-medium">{{ advisor.name }}</td>
+                    <td class="p-4 text-ink/70">{{ advisor.get_role_display }}</td>
+                    <td class="p-4 text-ink/70">{{ advisor.phone|default:"-" }}</td>
+                    <td class="p-4">
+                        {% if advisor.user %}
+                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">{{ advisor.user.username }}</span>
+                        {% else %}
+                        <span class="text-xs bg-gray-100 text-ink/40 px-2 py-1 rounded-full">متصل نیست</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-ink/70">{{ advisor.property_count }}</td>
+                    <td class="p-4">
+                        {% if advisor.is_active %}
+                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">فعال</span>
+                        {% else %}
+                        <span class="text-xs bg-gray-100 text-ink/50 px-2 py-1 rounded-full">غیرفعال</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <a href="{% url 'advisor_panel:manager_advisor_edit' advisor.pk %}" class="text-primary hover:underline">ویرایش</a>
+                            <form method="post" action="{% url 'advisor_panel:manager_advisor_toggle' advisor.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="{% if advisor.is_active %}text-red-600{% else %}text-green-600{% endif %} hover:underline">
+                                    {% if advisor.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">هنوز مشاوری ثبت نشده است.</p>
+    {% endif %}
+</section>
+{% endblock %}

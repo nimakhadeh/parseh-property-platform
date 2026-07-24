@@ -1,0 +1,13 @@
+{% if properties %}
+<div class="fixed bottom-0 inset-x-0 z-40 bg-ink text-white shadow-2xl">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
+        <span class="text-sm font-medium shrink-0">مقایسه ({{ properties|length }}/۳):</span>
+        <div class="flex items-center gap-3 flex-1 overflow-x-auto">
+            {% for property in properties %}
+            <span class="bg-white/10 text-xs px-3 py-1.5 rounded-full whitespace-nowrap">{{ property.title|truncatechars:20 }}</span>
+            {% endfor %}
+        </div>
+        <a href="{% url 'properties:compare_view' %}" class="bg-accent hover:bg-accent-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition shrink-0">مشاهده مقایسه</a>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,12 @@
+<button
+    hx-post="{% url 'properties:toggle_favorite' property.pk %}"
+    hx-target="this"
+    hx-swap="outerHTML"
+    onclick="event.stopPropagation(); event.preventDefault();"
+    class="w-10 h-10 rounded-full flex items-center justify-center transition {% if is_favorite %}bg-accent text-white{% else %}bg-primary-light text-ink/60 hover:text-accent{% endif %}"
+    title="{% if is_favorite %}حذف از علاقه‌مندی‌ها{% else %}افزودن به علاقه‌مندی‌ها{% endif %}"
+    aria-label="علاقه‌مندی">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="{% if is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+    </svg>
+</button>

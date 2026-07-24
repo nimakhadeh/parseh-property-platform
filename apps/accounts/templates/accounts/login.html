@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}ورود | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-14">
+    <div class="bg-white rounded-xl border border-line p-8">
+        <h1 class="text-2xl font-bold font-display text-ink mb-2 text-center">ورود به حساب کاربری</h1>
+        <p class="text-ink/50 text-sm text-center mb-8">برای مشاهده علاقه‌مندی‌ها و تاریخچه بازدید وارد شوید.</p>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm text-ink/70 mb-1">نام کاربری</label>
+                {{ form.username }}
+            </div>
+            <div>
+                <label class="block text-sm text-ink/70 mb-1">رمز عبور</label>
+                {{ form.password }}
+                <p class="text-left mt-1">
+                    <a href="{% url 'accounts:password_reset' %}" class="text-xs text-primary hover:underline">رمز عبور را فراموش کرده‌اید؟</a>
+                </p>
+            </div>
+            {% if form.errors %}
+            <p class="text-red-600 text-sm">نام کاربری یا رمز عبور اشتباه است.</p>
+            {% endif %}
+            <button type="submit" class="btn-primary w-full">ورود</button>
+        </form>
+
+        <p class="text-center text-sm text-ink/50 mt-6">
+            حساب کاربری ندارید؟
+            <a href="{% url 'accounts:register' %}" class="text-primary font-medium hover:underline">ثبت‌نام کنید</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

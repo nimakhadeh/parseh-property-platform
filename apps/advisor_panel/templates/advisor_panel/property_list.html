@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}ملک‌های من | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    {% include "advisor_panel/_nav.html" with active="properties" %}
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold font-display text-ink">ملک‌های من</h1>
+        <a href="{% url 'advisor_panel:property_create' %}" class="btn-primary text-sm">+ ملک جدید</a>
+    </div>
+
+    {% if properties %}
+    <div class="bg-white rounded-xl border border-line overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-line text-ink/50">
+                    <th class="p-4 text-right">عنوان</th>
+                    <th class="p-4 text-right">نوع</th>
+                    <th class="p-4 text-right">قیمت</th>
+                    <th class="p-4 text-right">بازدید</th>
+                    <th class="p-4 text-right">وضعیت</th>
+                    <th class="p-4 text-right">عملیات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                {% for property in properties %}
+                <tr>
+                    <td class="p-4 text-ink">{{ property.title|truncatechars:30 }}</td>
+                    <td class="p-4 text-ink/70">{{ property.get_transaction_type_display }}</td>
+                    <td class="p-4 text-ink/70">{{ property.price_display }}</td>
+                    <td class="p-4 text-ink/70">{{ property.views_count }}</td>
+                    <td class="p-4">
+                        {% if property.is_published %}
+                        <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">منتشرشده</span>
+                        {% else %}
+                        <span class="text-xs bg-gray-100 text-ink/50 px-2 py-1 rounded-full">غیرفعال</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <a href="{% url 'advisor_panel:property_edit' property.pk %}" class="text-primary hover:underline">ویرایش</a>
+                            <form method="post" action="{% url 'advisor_panel:property_delete' property.pk %}"
+                                  onsubmit="return confirm('آیا از خارج کردن این ملک از انتشار مطمئن هستید؟');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-600 hover:underline">حذف</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-outline text-sm">قبلی</a>{% endif %}
+        <span class="px-4 py-2 text-sm text-ink/60">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-outline text-sm">بعدی</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">هنوز ملکی ثبت نکرده‌اید.</p>
+    {% endif %}
+</section>
+{% endblock %}

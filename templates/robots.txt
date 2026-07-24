@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /{{ ADMIN_URL }}
+Disallow: /مقایسه/
+Disallow: /علاقه-مندی-ها/
+Disallow: /حساب-کاربری/پروفایل/
+Disallow: /پنل-مشاور/
+Disallow: /گزارش-مدیریت/
+
+Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}وبلاگ | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-14">
+    <h1 class="text-3xl font-bold font-display text-ink mb-10 text-center">وبلاگ پارسه</h1>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for post in posts %}
+        <a href="{{ post.get_absolute_url }}" class="bg-white rounded-xl border border-line overflow-hidden hover:shadow-lg transition group block">
+            <div class="h-44 overflow-hidden bg-primary-light relative">
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="{{ post.title }}" onerror="handleImgError(this)" loading="lazy"
+                         class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    <div class="img-fallback">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                    </div>
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-ink/40">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="p-5">
+                <p class="text-xs text-ink/40 mb-2">{{ post.created_at|date:"Y/m/d" }}</p>
+                <h2 class="font-semibold text-ink mb-2">{{ post.title }}</h2>
+                <p class="text-sm text-ink/50 line-clamp-2">{{ post.summary }}</p>
+            </div>
+        </a>
+        {% empty %}
+        <p class="col-span-3 text-center text-ink/40">هنوز مقاله‌ای منتشر نشده است.</p>
+        {% endfor %}
+    </div>
+
+    <!-- صفحه‌بندی -->
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-10">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn-outline text-sm">قبلی</a>
+        {% endif %}
+        <span class="px-4 py-2 text-sm text-ink/70">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn-outline text-sm">بعدی</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
