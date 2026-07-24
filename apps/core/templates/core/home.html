@@ -4,22 +4,79 @@
 
 {% block content %}
 <!-- بخش معرفی (هیرو) -->
-<section class="relative bg-primary overflow-hidden">
+<section class="relative bg-gradient-to-b from-primary to-primary-dark overflow-hidden">
     <div id="heroPattern" class="absolute inset-0 pattern-lattice opacity-40"></div>
-    <div class="relative max-w-5xl mx-auto px-4 text-center py-24">
-        <h1 class="hero-fade text-4xl md:text-6xl font-bold font-display text-white mb-5 leading-tight" style="animation-delay: 0ms;">
+    <div class="absolute -top-24 -left-16 w-72 h-72 sm:w-96 sm:h-96 bg-accent/25 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -right-16 w-72 h-72 sm:w-96 sm:h-96 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative max-w-5xl mx-auto px-4 text-center pt-20 sm:pt-24 pb-32 sm:pb-40">
+        <span class="hero-fade inline-flex items-center gap-1.5 mb-5 px-4 py-1.5 rounded-full bg-white/10 text-white/90 text-xs sm:text-sm font-medium border border-white/20" style="animation-delay: 0ms;">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            تحلیل هوشمند قیمت با هوش مصنوعی
+        </span>
+        <h1 class="hero-fade text-4xl md:text-6xl font-bold font-display text-white mb-5 leading-tight" style="animation-delay: 90ms;">
             ملک رویایی خود را با پارسه پیدا کنید
         </h1>
-        <p class="hero-fade text-white/80 text-lg mb-10 max-w-2xl mx-auto" style="animation-delay: 120ms;">
+        <p class="hero-fade text-white/80 text-lg max-w-2xl mx-auto" style="animation-delay: 180ms;">
             مشاوره تخصصی، تحلیل هوشمند بازار و بهترین گزینه‌های خرید، فروش و اجاره ملک
         </p>
-        <div class="hero-fade flex flex-wrap justify-center gap-4" style="animation-delay: 240ms;">
-            <a href="{% url 'properties:property_list' %}?type=sale" class="bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-3 rounded-lg transition text-lg">مشاهده املاک فروش</a>
-            <a href="{% url 'properties:property_list' %}?type=rent" class="border-2 border-white/70 text-white hover:bg-white hover:text-primary font-semibold px-8 py-3 rounded-lg transition text-lg">مشاهده املاک اجاره</a>
-        </div>
     </div>
 </section>
-<div class="pattern-divider"></div>
+
+<!-- کارت جستجوی شناور روی مرز هیرو -->
+<div class="relative max-w-4xl mx-auto px-4 -mt-24 sm:-mt-28 pb-16">
+    <form method="get" action="{% url 'properties:property_list' %}"
+          class="hero-fade bg-white rounded-2xl shadow-2xl shadow-primary-dark/20 border border-line p-4 sm:p-5" style="animation-delay: 280ms;">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            <div class="col-span-2 lg:col-span-1">
+                <label class="block text-xs text-ink/60 mb-1">نوع معامله</label>
+                <select name="type" class="input-field">
+                    <option value="">همه</option>
+                    <option value="sale">فروش</option>
+                    <option value="rent">اجاره</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-ink/60 mb-1">حداقل قیمت</label>
+                <input type="number" name="min_price" class="input-field" placeholder="تومان">
+            </div>
+            <div>
+                <label class="block text-xs text-ink/60 mb-1">حداکثر قیمت</label>
+                <input type="number" name="max_price" class="input-field" placeholder="تومان">
+            </div>
+            <div>
+                <label class="block text-xs text-ink/60 mb-1">تعداد اتاق</label>
+                <select name="rooms" class="input-field">
+                    <option value="">فرقی نمی‌کند</option>
+                    <option value="1">۱ اتاق</option>
+                    <option value="2">۲ اتاق</option>
+                    <option value="3">۳ اتاق</option>
+                    <option value="4">۴ اتاق به بالا</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary col-span-2 lg:col-span-1 flex items-center justify-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                جستجو
+            </button>
+        </div>
+    </form>
+
+    <!-- آمار اعتمادسازی (دیتای واقعی، نه ساختگی) -->
+    <div class="hero-fade grid grid-cols-3 gap-3 sm:gap-6 mt-8" style="animation-delay: 360ms;">
+        <div class="text-center">
+            <p class="text-2xl sm:text-3xl font-bold font-display text-primary">{{ stats_properties_count }}+</p>
+            <p class="text-xs sm:text-sm text-ink/60 mt-1">ملک فعال</p>
+        </div>
+        <div class="text-center border-x border-line">
+            <p class="text-2xl sm:text-3xl font-bold font-display text-primary">{{ stats_advisors_count }}</p>
+            <p class="text-xs sm:text-sm text-ink/60 mt-1">مشاور متخصص</p>
+        </div>
+        <div class="text-center">
+            <p class="text-2xl sm:text-3xl font-bold font-display text-primary">۲۴/۷</p>
+            <p class="text-xs sm:text-sm text-ink/60 mt-1">پاسخگویی آنلاین</p>
+        </div>
+    </div>
+</div>
 
 <!-- مشاوران برتر -->
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

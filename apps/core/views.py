@@ -33,6 +33,17 @@ class HomeView(TemplateView):
             lambda: list(TeamMember.objects.filter(is_active=True)[:4]),
             HOME_CACHE_TIMEOUT,
         )
+        # آمار واقعی برای بخش اعتمادسازی هیرو (نه عدد ساختگی)
+        context["stats_properties_count"] = cache.get_or_set(
+            "home:stats_properties_count",
+            lambda: Property.objects.filter(is_published=True).count(),
+            HOME_CACHE_TIMEOUT,
+        )
+        context["stats_advisors_count"] = cache.get_or_set(
+            "home:stats_advisors_count",
+            lambda: TeamMember.objects.filter(is_active=True).count(),
+            HOME_CACHE_TIMEOUT,
+        )
 
         # این بخش‌ها هیچ‌وقت کش نمی‌شوند چون به کاربر/session جاری وابسته‌اند
         context["favorite_ids"] = _favorite_ids(self.request)
