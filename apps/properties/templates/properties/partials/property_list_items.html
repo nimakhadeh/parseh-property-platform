@@ -1,7 +1,16 @@
 {% for property in properties %}
     {% include "properties/property_card.html" %}
 {% empty %}
-    <p class="col-span-3 text-center text-ink/40 py-10">ملکی با این فیلتر یافت نشد.</p>
+    <div class="col-span-full flex flex-col items-center text-center py-16 px-4">
+        <div class="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center text-primary/50 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
+            </svg>
+        </div>
+        <p class="text-ink font-medium mb-1">ملکی با این فیلتر پیدا نشد</p>
+        <p class="text-sm text-ink/50 mb-4">فیلترها را کمتر کن یا محدوده‌ی قیمت/متراژ را تغییر بده.</p>
+        <a href="{% url 'properties:property_list' %}" class="btn-outline text-sm">حذف همه فیلترها</a>
+    </div>
 {% endfor %}
 
 {% if page_obj.has_next %}
