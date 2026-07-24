@@ -19,22 +19,42 @@
         <div class="lg:col-span-2">
             <!-- گالری تصاویر -->
             <div class="bg-white rounded-xl border border-line overflow-hidden mb-6">
-                <div class="relative w-full h-96 bg-primary-light">
+                <div class="relative w-full h-96 bg-primary-light group cursor-zoom-in" onclick="openLightbox(currentGalleryIndex)">
                     <img id="mainImage" src="{{ property.image.url }}" alt="{{ property.title }}" onerror="handleImgError(this)" class="w-full h-full object-cover">
                     <div class="img-fallback">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-20 h-20 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                     </div>
+                    <span class="absolute bottom-3 left-3 z-20 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                        نمایش بزرگ
+                    </span>
                 </div>
                 {% if property.images|length > 1 %}
                 <div class="flex gap-2 p-3 overflow-x-auto">
                     {% for img in property.images %}
-                    <img src="{{ img.url }}" onerror="this.style.opacity=0.15" loading="lazy" onclick="document.getElementById('mainImage').src=this.src"
+                    <img src="{{ img.url }}" data-index="{{ forloop.counter0 }}" onerror="this.style.opacity=0.15" loading="lazy" onclick="event.stopPropagation(); selectGalleryImage(this)"
                          class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-primary transition">
                     {% endfor %}
                 </div>
                 {% endif %}
+            </div>
+
+            <!-- لایت‌باکس تمام‌صفحه برای عکس‌ها -->
+            <div id="lightbox" class="hidden fixed inset-0 z-[100] bg-black/90 items-center justify-center p-4" onclick="closeLightbox()">
+                <button type="button" onclick="closeLightbox()" aria-label="بستن" class="absolute top-4 left-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full bg-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                {% if property.images|length > 1 %}
+                <button type="button" onclick="event.stopPropagation(); shiftLightbox(1)" aria-label="قبلی" class="absolute right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full bg-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <button type="button" onclick="event.stopPropagation(); shiftLightbox(-1)" aria-label="بعدی" class="absolute left-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center rounded-full bg-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                {% endif %}
+                <img id="lightboxImage" src="" alt="{{ property.title }}" class="max-w-full max-h-full object-contain rounded-lg" onclick="event.stopPropagation()">
             </div>
 
             <div class="bg-white rounded-xl border border-line p-6 mb-6">
@@ -50,10 +70,22 @@
                 <p class="text-primary font-extrabold text-2xl mb-6">{{ property.price_display }}</p>
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center mb-6">
-                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">متراژ</p><p class="font-semibold">{{ property.area }} متر</p></div>
-                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">اتاق</p><p class="font-semibold">{{ property.rooms }}</p></div>
-                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">طبقه</p><p class="font-semibold">{{ property.floor }} از {{ property.total_floors }}</p></div>
-                    <div class="bg-canvas rounded-lg p-3"><p class="text-ink/50 text-xs">سال ساخت</p><p class="font-semibold">{{ property.year_built|default:"-" }}</p></div>
+                    <div class="bg-canvas rounded-lg p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mx-auto mb-1 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        <p class="text-ink/50 text-xs">متراژ</p><p class="font-semibold">{{ property.area }} متر</p>
+                    </div>
+                    <div class="bg-canvas rounded-lg p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mx-auto mb-1 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a1 1 0 001 1h16a1 1 0 001-1V10a1 1 0 00-1-1h-9V7a2 2 0 00-2-2H5a2 2 0 00-2 2z"/></svg>
+                        <p class="text-ink/50 text-xs">اتاق</p><p class="font-semibold">{{ property.rooms }}</p>
+                    </div>
+                    <div class="bg-canvas rounded-lg p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mx-auto mb-1 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 21V5a2 2 0 012-2h8a2 2 0 012 2v16M4 21h16M4 21v-6a2 2 0 012-2h2m6 0h2a2 2 0 012 2v6M9 7h1m4 0h1m-6 4h1m4 0h1"/></svg>
+                        <p class="text-ink/50 text-xs">طبقه</p><p class="font-semibold">{{ property.floor }} از {{ property.total_floors }}</p>
+                    </div>
+                    <div class="bg-canvas rounded-lg p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mx-auto mb-1 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p class="text-ink/50 text-xs">سال ساخت</p><p class="font-semibold">{{ property.year_built|default:"-" }}</p>
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap gap-2 mb-6">
@@ -104,7 +136,7 @@
         </div>
 
         <!-- ستون کناری: مشاور + فرم بازدید -->
-        <div class="space-y-6">
+        <div class="space-y-6 lg:sticky lg:top-20 lg:self-start">
             {% if property.advisor %}
             <div class="bg-white rounded-xl border border-line p-6 text-center">
                 {% if property.advisor.image %}
@@ -157,4 +189,43 @@
     </div>
     {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const galleryImages = [{% for img in property.images %}"{{ img.url|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+    let currentGalleryIndex = 0;
+
+    function selectGalleryImage(el) {
+        currentGalleryIndex = parseInt(el.dataset.index, 10);
+        document.getElementById('mainImage').src = el.src;
+    }
+
+    function openLightbox(index) {
+        if (!galleryImages.length) return;
+        currentGalleryIndex = index;
+        document.getElementById('lightboxImage').src = galleryImages[currentGalleryIndex];
+        const lightbox = document.getElementById('lightbox');
+        lightbox.classList.remove('hidden');
+        lightbox.classList.add('flex');
+    }
+
+    function closeLightbox() {
+        const lightbox = document.getElementById('lightbox');
+        lightbox.classList.add('hidden');
+        lightbox.classList.remove('flex');
+    }
+
+    function shiftLightbox(delta) {
+        currentGalleryIndex = (currentGalleryIndex + delta + galleryImages.length) % galleryImages.length;
+        document.getElementById('lightboxImage').src = galleryImages[currentGalleryIndex];
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('lightbox').classList.contains('hidden')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') shiftLightbox(1);
+        if (e.key === 'ArrowLeft') shiftLightbox(-1);
+    });
+</script>
 {% endblock %}
