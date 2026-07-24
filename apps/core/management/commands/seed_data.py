@@ -8,7 +8,7 @@ import logging
 from io import BytesIO
 
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -38,11 +38,34 @@ def download_image(url, filename, timeout=10):
 
 def placeholder_image(filename, size=(900, 600)):
     """
-    وقتی دانلود تصویر واقعی ناموفق باشد (مثلاً بدون اینترنت)، یک تصویر ساده‌ی محلی می‌سازد.
-    برای فیلدهایی که image اجباری است (مثل Property) لازم است، چون بدون آن seed_data کرش می‌کند.
+    وقتی دانلود تصویر واقعی ناموفق باشد (مثلاً بدون اینترنت)، یک تصویر جایگزین برندی
+    (گرادیانت هم‌رنگ پالت سایت + آیکون ساده‌ی خانه) می‌سازد، تا هم seed_data کرش نکند
+    و هم به‌جای یک مربع خاکستری تخت و یکنواخت، ظاهر قابل‌قبول‌تری داشته باشد.
     """
+    width, height = size
+    top, bottom = (232, 242, 239), (250, 246, 239)  # primary-light -> canvas (برند سایت)
+    gradient = Image.new("RGB", (1, height))
+    for y in range(height):
+        ratio = y / max(height - 1, 1)
+        gradient.putpixel((0, y), tuple(
+            round(top[i] + (bottom[i] - top[i]) * ratio) for i in range(3)
+        ))
+    img = gradient.resize((width, height))
+
+    draw = ImageDraw.Draw(img)
+    primary = (14, 93, 80)
+    cx, cy, s = width // 2, height // 2, min(width, height) // 6
+    draw.polygon(
+        [(cx - s, cy - s // 4), (cx, cy - int(s * 1.3)), (cx + s, cy - s // 4)],
+        outline=primary, width=4,
+    )
+    draw.rectangle(
+        [(cx - int(s * 0.7), cy - s // 4), (cx + int(s * 0.7), cy + s)],
+        outline=primary, width=4,
+    )
+
     buffer = BytesIO()
-    Image.new("RGB", size, color=(226, 220, 208)).save(buffer, format="JPEG", quality=70)
+    img.save(buffer, format="JPEG", quality=80)
     return ContentFile(buffer.getvalue(), name=filename)
 
 
