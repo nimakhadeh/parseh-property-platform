@@ -1,25 +1,28 @@
 """
 فشرده‌سازی خودکار تصاویر آپلودی برای بهبود سرعت لود سایت.
 عکس‌های موبایل امروزه اغلب ۳ تا ۸ مگابایت هستند؛ این ابزار آن‌ها را قبل از
-ذخیره در دیسک/فضای ابری، به حداکثر ۱۶۰۰ پیکسل عرض و کیفیت ۸۲٪ کاهش می‌دهد.
+ذخیره در دیسک/فضای ابری، به حداکثر ۱۶۰۰ پیکسل عرض و فرمت WebP (کیفیت ۸۲٪) تبدیل می‌کند.
+WebP در همان کیفیت بصری معمولاً ۲۵-۳۵٪ کوچک‌تر از JPEG است و شفافیت (RGBA) را هم پشتیبانی می‌کند.
 """
 import sys
 import logging
 from io import BytesIO
+from pathlib import PurePosixPath
 from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile, UploadedFile
 
 logger = logging.getLogger(__name__)
 
 MAX_DIMENSION = 1600
-JPEG_QUALITY = 82
+WEBP_QUALITY = 82
 
 
-def compress_image_field(image_field, max_dimension=MAX_DIMENSION, quality=JPEG_QUALITY):
+def compress_image_field(image_field, max_dimension=MAX_DIMENSION, quality=WEBP_QUALITY):
     """
     اگر مقدار این فیلد یک فایل تازه‌آپلودشده باشد (نه فایل از قبل ذخیره‌شده در storage)،
-    آن را فشرده کرده و یک InMemoryUploadedFile جدید برمی‌گرداند تا به‌جای فایل اصلی ذخیره شود.
-    اگر فیلد خالی باشد یا فشرده‌سازی با خطا مواجه شود، مقدار اصلی بدون تغییر برگردانده می‌شود.
+    آن را به WebP تبدیل و فشرده کرده و یک InMemoryUploadedFile جدید برمی‌گرداند تا
+    به‌جای فایل اصلی ذخیره شود. اگر فیلد خالی باشد یا فشرده‌سازی با خطا مواجه شود،
+    مقدار اصلی بدون تغییر برگردانده می‌شود.
     """
     if not image_field or not hasattr(image_field, "file"):
         return image_field
@@ -36,24 +39,21 @@ def compress_image_field(image_field, max_dimension=MAX_DIMENSION, quality=JPEG_
 
     try:
         img = Image.open(image_field)
-        img_format = (img.format or "JPEG").upper()
         original_name = image_field.name
 
-        if img.mode in ("RGBA", "P") and img_format == "JPEG":
-            img = img.convert("RGB")
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGBA" if "transparency" in img.info or img.mode == "P" else "RGB")
 
         if img.width > max_dimension or img.height > max_dimension:
             img.thumbnail((max_dimension, max_dimension), Image.LANCZOS)
 
         buffer = BytesIO()
-        save_kwargs = {"optimize": True}
-        if img_format in ("JPEG", "WEBP"):
-            save_kwargs["quality"] = quality
-        img.save(buffer, format=img_format, **save_kwargs)
+        img.save(buffer, format="WEBP", quality=quality, method=6)
         buffer.seek(0)
 
+        webp_name = f"{PurePosixPath(original_name).stem}.webp"
         return InMemoryUploadedFile(
-            buffer, "ImageField", original_name, f"image/{img_format.lower()}",
+            buffer, "ImageField", webp_name, "image/webp",
             sys.getsizeof(buffer), None,
         )
     except Exception as exc:

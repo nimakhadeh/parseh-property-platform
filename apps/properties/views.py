@@ -1,9 +1,14 @@
 from django.views.generic import ListView, DetailView
 from django.db.models import F
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from .models import Property, PropertyView as PropertyViewHistory
 from .wishlist_views import _favorite_ids
+
+# کش استخر ملک‌های مرتبط برای صفحه جزئیات؛ فقط ۲ کلید (sale/rent) پس با
+# ابطال کش صفحه اصلی هماهنگ است (apps/core/signals.py::_clear_home_cache)
+RELATED_PROPERTIES_CACHE_TIMEOUT = 60 * 15  # ۱۵ دقیقه
 
 
 class PropertyListView(ListView):
@@ -104,9 +109,19 @@ class PropertyDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["related_properties"] = Property.objects.filter(
-            is_published=True, transaction_type=self.object.transaction_type
-        ).exclude(pk=self.object.pk)[:3]
+
+        related_pool = cache.get_or_set(
+            f"property_detail:related:{self.object.transaction_type}",
+            lambda: list(
+                Property.objects.filter(
+                    is_published=True, transaction_type=self.object.transaction_type
+                ).order_by("-created_at")[:10]
+            ),
+            RELATED_PROPERTIES_CACHE_TIMEOUT,
+        )
+        context["related_properties"] = [p for p in related_pool if p.pk != self.object.pk][:3]
+
+        # این بخش‌ها هیچ‌وقت کش نمی‌شوند چون به کاربر/session جاری وابسته‌اند
         context["favorite_ids"] = _favorite_ids(self.request)
         context["compare_ids"] = self.request.session.get("compare_properties", [])
         return context

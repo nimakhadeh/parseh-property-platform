@@ -11,7 +11,10 @@ from apps.team.models import TeamMember
 
 
 def _clear_home_cache(**kwargs):
-    cache.delete_many(["home:sale_properties", "home:rent_properties", "home:team_members"])
+    cache.delete_many([
+        "home:sale_properties", "home:rent_properties", "home:team_members",
+        "property_detail:related:sale", "property_detail:related:rent",
+    ])
 
 
 post_save.connect(_clear_home_cache, sender=Property)

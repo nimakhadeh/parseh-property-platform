@@ -66,11 +66,11 @@ apps/
 - `ManagerRequiredMixin` → فقط `is_staff` (برای `/پنل-مشاور/مدیریت-مشاوران/`).
 - تست‌های `apps/advisor_panel/tests.py` دقیقاً همین جداسازی را چک می‌کنند — قبل از تغییر این ویوها تست‌ها را اجرا کن.
 
-### ۴. فشرده‌سازی خودکار عکس
-`apps/core/image_utils.py::compress_image_field()` — در `save()` مدل‌های `Property`, `TeamMember`, `Post`, `PropertyValuationRequest` صدا زده می‌شود. فقط فایل‌های **تازه‌آپلودشده** را پردازش می‌کند (چک `_committed` و `isinstance(..., UploadedFile)`) — هرگز فایل‌های قبلاً ذخیره‌شده را دوباره فشرده نمی‌کند (وگرنه کیفیت هر بار افت می‌کرد).
+### ۴. فشرده‌سازی خودکار عکس + تبدیل به WebP
+`apps/core/image_utils.py::compress_image_field()` — در `save()` مدل‌های `Property`, `TeamMember`, `Post`, `PropertyValuationRequest` صدا زده می‌شود. فقط فایل‌های **تازه‌آپلودشده** را پردازش می‌کند (چک `_committed` و `isinstance(..., UploadedFile)`) — هرگز فایل‌های قبلاً ذخیره‌شده را دوباره فشرده نمی‌کند (وگرنه کیفیت هر بار افت می‌کرد). خروجی همیشه **WebP** است (کیفیت ۸۲٪، حداکثر ۱۶۰۰px) صرف‌نظر از فرمت آپلودی (jpg/png/webp) — پسوند فایل ذخیره‌شده هم به `.webp` تغییر می‌کند. اعتبارسنجی پسوند آپلودی (`apps.core.validators.validate_image_file`) روی فایل **قبل از** این تبدیل چک می‌شود، پس تغییر نکرده.
 
-### ۵. کش صفحه اصلی + ابطال خودکار
-`apps/core/views.py::HomeView` سه کوئری (`sale_properties`, `rent_properties`, `team_members`) را ۱۵ دقیقه کش می‌کند. `apps/core/signals.py` با `post_save`/`post_delete` روی `Property` و `TeamMember` این کش را پاک می‌کند. اگر مدل جدیدی به صفحه اصلی اضافه کردی که باید کش شود، هم کلید کش را در `HomeView` اضافه کن هم سیگنال ابطالش را در `signals.py`.
+### ۵. کش صفحه اصلی + صفحه جزئیات ملک + ابطال خودکار
+`apps/core/views.py::HomeView` سه کوئری (`sale_properties`, `rent_properties`, `team_members`) و `apps/properties/views.py::PropertyDetailView` استخر ملک‌های مرتبط (`property_detail:related:sale` / `property_detail:related:rent`، ۱۰تای آخر هر نوع معامله) را ۱۵ دقیقه کش می‌کنند. `apps/core/signals.py` با `post_save`/`post_delete` روی `Property` و `TeamMember` همه‌ی این کلیدها را با هم پاک می‌کند. اگر مدل/کوئری جدیدی اضافه کردی که باید کش شود، هم کلید کش را در ویو اضافه کن هم به لیست `cache.delete_many` در `signals.py::_clear_home_cache` اضافه‌اش کن.
 **نکته پایداری:** `CACHES.OPTIONS.IGNORE_EXCEPTIONS = True` در `config/settings/base.py` — اگر Redis پایین باشد سایت کرش نمی‌کند، فقط کش نادیده گرفته می‌شود.
 
 ### ۶. تسک‌های Celery باید دقیقاً `tasks.py` نام‌گذاری شوند
