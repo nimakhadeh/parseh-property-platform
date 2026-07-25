@@ -106,8 +106,12 @@ STORAGES = {
 نکته: در `DEBUG=True` جنگو عمداً URL بدون هش برمی‌گرداند (رفتار خودِ Django، نه باگ) — فقط در `DEBUG=False` (تولید) نام فایل هش‌دار دیده می‌شود؛ برای تست واقعی این رفتار باید موقتاً `DEBUG=False` ست کنی.
 
 ### ۱۰. رنگ/فونت برند — دیگر دست نزن مگر خواسته شود
-پالت در `templates/base.html` (تگ `<style>` بالای فایل): `primary` #0E5D50 (سبز زیتونی)، `accent` #C68A3D (طلایی)، `brick` #B6512E، `canvas` #FAF6EF، `ink` #1B2A2E، `line` #E4DDD0. فونت فقط **Vazirmatn** (فونت نستعلیق/Aref Ruqaa عمداً حذف شد، کاربر نخواستش).
-حالت تاریک از طریق CSS variables + کلاس `.dark` روی `<html>` پیاده‌سازی شده (نه `dark:` utility روی تک‌تک المان‌ها) — یعنی اکثر `bg-white`/`text-ink`/`border-line` خودکار دارک‌مود می‌گیرند بدون دست‌زدن به هر template.
+پالت در `tailwind.config.js` (رنگ‌ها) و `static/css/input.css` (متغیرهای CSS/دارک‌مود/کلاس‌های کمکی) تعریف شده‌اند — **نه** دیگر در `templates/base.html` (از فاز ۱۰ ظاهری به بعد منتقل شد، بخش ۹ بالا را ببین): `primary` #0E5D50 (سبز زیتونی)، `accent` #C68A3D (طلایی)، `brick` #B6512E، `canvas` #FAF6EF، `ink` #1B2A2E، `line` #E4DDD0. فونت فقط **Vazirmatn** (فونت نستعلیق/Aref Ruqaa عمداً حذف شد، کاربر نخواستش).
+حالت تاریک از طریق CSS variables + کلاس `.dark` روی `<html>` پیاده‌سازی شده (نه `dark:` utility روی تک‌تک المان‌ها) — یعنی اکثر `bg-white`/`text-ink`/`border-line` خودکار دارک‌مود می‌گیرند بدون دست‌زدن به هر template. **یادآوری:** هر تغییر رنگ/CSS سفارشی باید در `static/css/input.css` یا `tailwind.config.js` اعمال و دوباره build شود (دستور در بخش ۹)، ویرایش مستقیم `static/css/tailwind.css` بی‌فایده‌ست چون فایل build‌شده‌ست و با build بعدی از بین می‌رود.
+
+### ۱۱. جستجو و ناوبری فعلی (فاز‌های ظاهری اضافه شدند)
+- `PropertyListView` یک پارامتر `q` هم می‌پذیرد (`apps/properties/views.py`) که روی `title`/`address` با `icontains` سرچ می‌کند — چون فیلد ساختاریافته‌ی منطقه/محله در مدل وجود ندارد. اگر بعداً فیلد `district` اضافه شد، این سرچ را هم به آن وصل کن.
+- ناوبری هدر (`templates/base.html`) بین لینک‌های "خرید"/"اجاره" (هرکدام `?type=sale`/`?type=rent` به `property_list`) به‌جای یک لینک عمومی "املاک" تفکیک شده و حالت active با `request.resolver_match.app_name`/`view_name` + `request.GET.type` مشخص می‌شود — اگر صفحه/لینک ناوبری جدیدی اضافه کردی، همین الگو را برای active-state دنبال کن.
 
 ## راه‌اندازی محیط توسعه محلی (این کپی روی لپ‌تاپ/سیستم `ni`)
 
@@ -153,3 +157,4 @@ bash restore_db.sh backups/FILE.sql.gz                          # بازیابی
 3. اگر فیلد تصویر جدید اضافه کردی → `validators=[validate_image_file]` (از `apps.core.validators`) بگذار و در `save()` مدل `compress_image_field` صدا بزن.
 4. قبل از تحویل نهایی هر تغییر، حداقل یک بار `python manage.py test` و `python manage.py check` را (اگر Django نصب است) اجرا کن.
 5. متن‌ها/UI همیشه فارسی و راست‌چین (`dir="rtl"`) — این یک پروژه بین‌المللی نیست.
+6. اگر کلاس Tailwind تازه‌ای به تمپلیتی اضافه کردی که قبلاً هیچ‌جا استفاده نشده، **حتماً یادآوری بده که باید دوباره build بگیرد** (بخش ۹) — چون `static/css/tailwind.css` دیگر زنده/CDN نیست، کلاس جدید تا build نگیری اصلاً در CSS خروجی وجود نخواهد داشت و در مرورگر بی‌اثر می‌ماند (نه خطا، فقط ساکت نادیده گرفته می‌شود).
