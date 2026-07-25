@@ -63,6 +63,9 @@ jobs:
       - name: اجرای مایگریشن‌ها (آزمایشی)
         run: python manage.py migrate --noinput
 
+      - name: جمع‌آوری فایل‌های استاتیک
+        run: python manage.py collectstatic --noinput
+
       - name: اجرای تست‌ها
         run: python manage.py test
 
