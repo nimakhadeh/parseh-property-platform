@@ -12,7 +12,7 @@
 | بک‌اند | Django 5.1، Python 3.12 |
 | دیتابیس | PostgreSQL (بدون PostGIS — قبلاً بود، حذف شد چون لازم نبود) |
 | کش/صف | Redis + django-redis + Celery |
-| فرانت | HTMX + Tailwind CSS (CDN، نه build فایل) — بدون React/Vue |
+| فرانت | HTMX + Tailwind CSS (build واقعی با باینری standalone، نه CDN) — بدون React/Vue/Node |
 | نقشه | Leaflet + OpenStreetMap (رایگان، بدون API key) |
 | AI | DeepSeek API از طریق کتابخانه `openai` |
 | Auth | سیستم کاربری built-in جنگو (`django.contrib.auth`) + مدل `Profile` اضافه |
@@ -82,7 +82,30 @@ apps/
 ### ۸. اعلان تلگرام — سرویس مشترک
 منطق پایه در `apps/core/telegram.py::send_telegram_message()`. هر اپ (`contact`, `properties`) یک wrapper نازک روی آن دارد (`telegram_notify.py` / `valuation_notify.py`) که پیام مخصوص خودش را می‌سازد. اگر می‌خواهی اعلان جدید اضافه کنی، تابع پایه را تغییر نده، فقط یک wrapper جدید بساز.
 
-### ۹. رنگ/فونت برند — دیگر دست نزن مگر خواسته شود
+### ۹. Tailwind CSS — build واقعی، نه CDN
+قبلاً `cdn.tailwindcss.com` + `tailwind.config` به‌صورت اینلاین در `templates/base.html` بود (کنسول مرورگر هشدار "should not be used in production" می‌داد). الان:
+- `tailwind.config.js` (ریشه پروژه) — همان تنظیمات رنگ/فونت قبلی، از JS اینلاین منتقل شده. `content` روی `templates/**/*.html` و `apps/**/templates/**/*.html` تنظیم شده — اگر تمپلیت تازه‌ای بیرون از این دو مسیر اضافه کردی، این لیست را هم آپدیت کن وگرنه کلاس‌های آن تمپلیت purge می‌شوند.
+- `static/css/input.css` — منبع: دایرکتیوهای `@tailwind` + همان CSS سفارشی که قبلاً در `<style>` داخل `base.html` بود (بدون تغییر منطقی).
+- `static/css/tailwind.css` — خروجی build‌شده و **کامیت‌شده در گیت** (عمداً، چون سرور Node/npm ندارد؛ نیازی به build روی VPS نیست).
+- **بعد از هر تغییر در کلاس‌های Tailwind تمپلیت‌ها یا `tailwind.config.js`، باید دوباره build بگیری** (این پروژه Node ندارد؛ از باینری standalone خود Tailwind از طریق پکیج پایتونی `pytailwindcss` استفاده کن):
+  ```bash
+  pip install pytailwindcss
+  TAILWINDCSS_VERSION=v3.4.17 python -m pytailwindcss -i static/css/input.css -o static/css/tailwind.css --minify
+  python manage.py collectstatic --noinput
+  ```
+  نسخه v3 عمداً پین شده (نه latest/v4) چون کانفیگ فعلی به سبک v3 (`tailwind.config.js` با JS API) نوشته شده؛ v4 از CSS-first config استفاده می‌کند و مهاجرت جداگانه می‌خواهد.
+
+### ۹.۱ باگ کشف‌شده: STATICFILES_STORAGE روی Django 5.1 اصلاً خوانده نمی‌شود
+تنظیم قدیمی `STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"` در Django 5.1 **کاملاً حذف شده** (نه فقط deprecated) — بی‌صدا نادیده گرفته می‌شد و whitenoise هیچ‌وقت واقعاً فعال نبود (نه فشرده‌سازی، نه هش کش‌باستینگ روی فایل‌های استاتیک، حتی روی VPS واقعی). این حین ساخت Tailwind build کشف و رفع شد؛ الان در `config/settings/base.py` از `STORAGES` (فرمت جدید جنگو ۴.۲+) استفاده می‌شود:
+```python
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+```
+نکته: در `DEBUG=True` جنگو عمداً URL بدون هش برمی‌گرداند (رفتار خودِ Django، نه باگ) — فقط در `DEBUG=False` (تولید) نام فایل هش‌دار دیده می‌شود؛ برای تست واقعی این رفتار باید موقتاً `DEBUG=False` ست کنی.
+
+### ۱۰. رنگ/فونت برند — دیگر دست نزن مگر خواسته شود
 پالت در `templates/base.html` (تگ `<style>` بالای فایل): `primary` #0E5D50 (سبز زیتونی)، `accent` #C68A3D (طلایی)، `brick` #B6512E، `canvas` #FAF6EF، `ink` #1B2A2E، `line` #E4DDD0. فونت فقط **Vazirmatn** (فونت نستعلیق/Aref Ruqaa عمداً حذف شد، کاربر نخواستش).
 حالت تاریک از طریق CSS variables + کلاس `.dark` روی `<html>` پیاده‌سازی شده (نه `dark:` utility روی تک‌تک المان‌ها) — یعنی اکثر `bg-white`/`text-ink`/`border-line` خودکار دارک‌مود می‌گیرند بدون دست‌زدن به هر template.
 

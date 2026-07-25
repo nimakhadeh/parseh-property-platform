@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- متغیرهای رنگی سازگار با حالت روشن/تاریک --- */
+:root {
+    --color-canvas: 250 246 239;       /* #FAF6EF */
+    --color-ink: 27 42 46;             /* #1B2A2E */
+    --color-surface: 255 255 255;      /* پس‌زمینه کارت‌ها در حالت روشن */
+    --color-line: 228 221 208;         /* #E4DDD0 */
+    --color-primary-light: 232 242 239;/* #E8F2EF */
+}
+html.dark {
+    --color-canvas: 17 24 25;
+    --color-ink: 226 231 228;
+    --color-surface: 27 37 39;
+    --color-line: 42 55 57;
+    --color-primary-light: 16 40 36;
+    color-scheme: dark;
+}
+body { font-family: 'Vazirmatn', sans-serif; background-color: rgb(var(--color-canvas)); color: rgb(var(--color-ink)); transition: background-color 0.3s ease, color 0.3s ease; }
+.font-display { font-family: 'Vazirmatn', sans-serif; font-weight: 800; letter-spacing: -0.01em; }
+
+/* پس‌زمینه سفید ثابت (کارت‌ها/فرم‌ها) در حالت تاریک به رنگ surface تیره تبدیل می‌شود */
+.dark .bg-white { background-color: rgb(var(--color-surface)); }
+.dark header.bg-white\/90 { background-color: rgb(var(--color-surface) / 0.9); }
+.dark .bg-white\/95 { background-color: rgb(var(--color-surface) / 0.95); }
+
+/* --- امضای بصری: الگوی هندسی الهام‌گرفته از قاب‌بندی سنتی --- */
+.pattern-lattice {
+    background-image:
+        repeating-linear-gradient(45deg, rgba(198,138,61,0.10) 0, rgba(198,138,61,0.10) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(-45deg, rgba(198,138,61,0.10) 0, rgba(198,138,61,0.10) 1px, transparent 1px, transparent 20px);
+}
+.pattern-divider {
+    height: 16px;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(250,246,239,0.9) 0, rgba(250,246,239,0.9) 1px, transparent 1px, transparent 12px),
+        repeating-linear-gradient(-45deg, rgba(250,246,239,0.9) 0, rgba(250,246,239,0.9) 1px, transparent 1px, transparent 12px);
+    background-color: #0E5D50;
+}
+
+.input-field {
+    width: 100%; padding: 0.65rem 1rem; border: 1px solid #E4DDD0;
+    border-radius: 0.5rem; outline: none; transition: 0.2s; background: #fff; color: #1B2A2E;
+}
+.input-field:focus { border-color: #0E5D50; box-shadow: 0 0 0 3px rgba(14,93,80,0.15); }
+.btn-primary {
+    background: #0E5D50; color: #fff; padding: 0.65rem 1.5rem; border-radius: 0.5rem;
+    font-weight: 600; transition: 0.2s; display: inline-block;
+}
+.btn-primary:hover { background: #0A3F37; }
+.btn-outline {
+    border: 2px solid #0E5D50; color: #0E5D50; padding: 0.6rem 1.5rem; border-radius: 0.5rem;
+    font-weight: 600; transition: 0.2s; display: inline-block;
+}
+.btn-outline:hover { background: #0E5D50; color: #fff; }
+
+/* تصویر جایگزین برای عکس‌های گم‌شده (به‌جای آیکون شکسته مرورگر) */
+.img-fallback {
+    display: none; width: 100%; height: 100%; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgb(var(--color-primary-light)) 0%, rgb(var(--color-canvas)) 100%);
+    color: #0E5D50;
+}
+
+/* نوار پیشرفت بالای صفحه برای درخواست‌های HTMX */
+#htmx-progress-bar {
+    position: fixed; top: 0; right: 0; left: 0; height: 3px; z-index: 100;
+    background: #C68A3D; transform: scaleX(0); transform-origin: right;
+    transition: transform 0.3s ease;
+}
+#htmx-progress-bar.active { transform: scaleX(1); }
+
+/* دسترس‌پذیری: فوکوس قابل مشاهده با کیبورد */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid #C68A3D; outline-offset: 2px; border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* انیمیشن ورود عناصر هنگام اسکرول (fade-in-up) */
+.reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* انیمیشن ورود برای بخش هیرو (بالای صفحه، بدون نیاز به اسکرول) */
+.hero-fade {
+    opacity: 0; transform: translateY(16px);
+    animation: hero-fade-in 0.8s ease forwards;
+}
+@keyframes hero-fade-in {
+    to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero-fade { opacity: 1; transform: none; animation: none; }
+}
+
+/* اسکلتون لودینگ (به‌جای متن ساده «در حال بارگذاری») */
+.skeleton {
+    background: linear-gradient(90deg, rgb(var(--color-primary-light)) 25%, rgb(var(--color-line)) 37%, rgb(var(--color-primary-light)) 63%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+}
+@keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
