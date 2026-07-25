@@ -23,7 +23,7 @@
             <h2 class="font-semibold text-ink mb-4">فرم تماس</h2>
             <form hx-post="{% url 'contact:contact_submit' %}" hx-target="#contact-form-result" hx-swap="innerHTML" class="space-y-4">
                 {% csrf_token %}
-                <div class="absolute -left-[9999px]" aria-hidden="true">
+                <div class="sr-only" aria-hidden="true">
                     <label for="website">وب‌سایت (خالی بگذارید)</label>
                     <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
                 </div>

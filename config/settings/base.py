@@ -190,7 +190,11 @@ LOGOUT_REDIRECT_URL = "/"
 # -----------------------------------------------------------------------
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_HTTPONLY باید False بماند: base.html با جاوااسکریپت کوکی csrftoken را
+# می‌خواند و به هدر X-CSRFToken هر درخواست HTMX تزریق می‌کند (برای hx-post هایی که
+# داخل <form> نیستند، مثل دکمه‌های لایک/مقایسه/تحلیل AI). اگر True شود، آن جاوااسکریپت
+# نمی‌تواند کوکی را بخواند و همه‌ی این دکمه‌ها با خطای 403 CSRF مواجه می‌شوند.
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # یک هفته
 

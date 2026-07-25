@@ -162,7 +162,7 @@
                 <h3 class="font-semibold text-ink mb-4">درخواست بازدید از ملک</h3>
                 <form hx-post="{% url 'contact:contact_submit' %}" hx-target="#visit-form-result" hx-swap="innerHTML" class="space-y-3">
                     {% csrf_token %}
-                    <div class="absolute -left-[9999px]" aria-hidden="true">
+                    <div class="sr-only" aria-hidden="true">
                         <label for="website2">وب‌سایت (خالی بگذارید)</label>
                         <input type="text" name="website" id="website2" tabindex="-1" autocomplete="off">
                     </div>
