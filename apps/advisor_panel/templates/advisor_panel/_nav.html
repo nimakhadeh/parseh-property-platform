@@ -3,7 +3,14 @@
     <a href="{% url 'advisor_panel:property_list' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'properties' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">ملک‌های من</a>
     <a href="{% url 'advisor_panel:contact_requests' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'contact_requests' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">درخواست‌های تماس</a>
     <a href="{% url 'advisor_panel:valuation_queue' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'valuation' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">ارزیابی ملک</a>
+    <a href="{% url 'advisor_panel:activity_log_list' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'activity_logs' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">لاگ فعالیت</a>
+    <a href="{% url 'advisor_panel:task_list' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'tasks' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">کارتابل وظایف</a>
+    <a href="{% url 'advisor_panel:calendar' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'calendar' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">تقویم</a>
+    <a href="{% url 'advisor_panel:deal_kanban' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'deals' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">قیف فروش</a>
+    <a href="{% url 'advisor_panel:customer_list' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'customers' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">مشتریان</a>
     {% if user.is_staff %}
+    <a href="{% url 'advisor_panel:today_map' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'today_map' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">نقشه‌ی امروز</a>
+    <a href="{% url 'advisor_panel:performance' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'performance' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">عملکرد مشاوران</a>
     <a href="{% url 'advisor_panel:manager_advisor_list' %}" class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition {% if active == 'manage_advisors' %}bg-primary text-white{% else %}text-ink/60 hover:bg-primary-light{% endif %}">مدیریت مشاوران</a>
     {% endif %}
 </div>

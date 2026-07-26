@@ -4,6 +4,9 @@ from django.core.exceptions import ValidationError
 MAX_IMAGE_SIZE_MB = 5
 ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 
+MAX_DOCUMENT_SIZE_MB = 10
+ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "webp"}
+
 
 def validate_image_file(file):
     """
@@ -22,3 +25,20 @@ def validate_image_file(file):
     max_size_bytes = MAX_IMAGE_SIZE_MB * 1024 * 1024
     if file.size > max_size_bytes:
         raise ValidationError(f"حجم فایل نباید بیشتر از {MAX_IMAGE_SIZE_MB} مگابایت باشد.")
+
+
+def validate_document_file(file):
+    """
+    بررسی می‌کند فایل سند آپلودشده (قرارداد/وکالت‌نامه/سند مالکیت/مدرک شناسایی):
+    ۱) از نوع مجاز باشد (pdf, jpg, jpeg, png, webp)
+    ۲) حجمش بیشتر از ۱۰ مگابایت نباشد
+    """
+    ext = file.name.rsplit(".", 1)[-1].lower() if "." in file.name else ""
+    if ext not in ALLOWED_DOCUMENT_EXTENSIONS:
+        raise ValidationError(
+            f"فرمت فایل مجاز نیست. فرمت‌های مجاز: {', '.join(sorted(ALLOWED_DOCUMENT_EXTENSIONS))}"
+        )
+
+    max_size_bytes = MAX_DOCUMENT_SIZE_MB * 1024 * 1024
+    if file.size > max_size_bytes:
+        raise ValidationError(f"حجم فایل نباید بیشتر از {MAX_DOCUMENT_SIZE_MB} مگابایت باشد.")

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}نظرسنجی رضایت مشتری | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-lg mx-auto px-4 py-16">
+    <div class="bg-white rounded-xl border border-line p-8 text-center">
+        {% if already_submitted %}
+        <h1 class="text-xl font-bold font-display text-ink mb-2">نظرسنجی قبلاً ثبت شده است</h1>
+        <p class="text-ink/50 text-sm">شما پیش‌تر نظر خود را درباره‌ی «{{ deal.title }}» ثبت کرده‌اید. از همراهی شما سپاسگزاریم.</p>
+
+        {% elif submitted %}
+        <h1 class="text-xl font-bold font-display text-primary mb-2">با تشکر از شما 🙏</h1>
+        <p class="text-ink/50 text-sm">نظر شما درباره‌ی «{{ deal.title }}» با موفقیت ثبت شد.</p>
+
+        {% else %}
+        <h1 class="text-xl font-bold font-display text-ink mb-1">نظرسنجی رضایت مشتری</h1>
+        <p class="text-ink/50 text-sm mb-6">لطفاً تجربه‌ی خود از «{{ deal.title }}» را با ما در میان بگذارید.</p>
+
+        <form method="post" class="text-right space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm text-ink/70 mb-2">امتیاز شما</label>
+                <div class="flex justify-center gap-4">
+                    {% for value, label in form.rating.field.choices %}
+                    <label class="flex flex-col items-center gap-1 cursor-pointer text-xs text-ink/60">
+                        <input type="radio" name="rating" value="{{ value }}" class="w-4 h-4 accent-primary" {% if forloop.last %}checked{% endif %}>
+                        {{ label }}
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.rating.errors %}<p class="text-red-600 text-xs mt-2">{{ form.rating.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+                {{ form.comment }}
+                {% if form.comment.errors %}<p class="text-red-600 text-xs mt-1">{{ form.comment.errors.0 }}</p>{% endif %}
+            </div>
+            <button type="submit" class="btn-primary w-full">ثبت نظر</button>
+        </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

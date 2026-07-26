@@ -21,6 +21,8 @@ urlpatterns = [
     path("وبلاگ/", include("apps.blog.urls")),
     path("تماس/", include("apps.contact.urls")),
     path("ai/", include("apps.ai.urls")),
+    path("اعلان-ها/", include("apps.notifications.urls")),
+    path("نظرسنجی/", include("apps.crm.urls")),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"), name="robots"),
 ]

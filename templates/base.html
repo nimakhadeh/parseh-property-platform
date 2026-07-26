@@ -92,6 +92,12 @@
                          hx-swap="innerHTML"
                          class="flex items-center gap-1"></div>
                     {% if user.is_authenticated %}
+                    <div id="notification-bell"
+                         hx-get="{% url 'notifications:bell_partial' %}"
+                         hx-trigger="load, notificationsUpdated from:body, every 30s"
+                         hx-swap="innerHTML"></div>
+                    {% endif %}
+                    {% if user.is_authenticated %}
                     {% if user.is_staff %}
                     <a href="{% url 'core:reports' %}" class="hidden sm:inline-block text-sm text-ink/80 hover:text-primary font-medium transition">گزارش مدیریت</a>
                     {% endif %}
@@ -314,6 +320,15 @@
                 iconClose.classList.add('hidden');
                 mobileMenuBtn.setAttribute('aria-expanded', 'false');
             });
+        });
+
+        // بستن دراپ‌داون زنگوله‌ی اعلان‌ها با کلیک بیرون از آن
+        document.addEventListener('click', (event) => {
+            const bell = document.getElementById('notification-bell');
+            const dropdown = document.getElementById('notif-dropdown');
+            if (dropdown && bell && !bell.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
         });
 
         // نوار پیشرفت بالای صفحه هنگام درخواست‌های HTMX

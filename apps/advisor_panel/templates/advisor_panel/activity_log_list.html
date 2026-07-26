@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}لاگ فعالیت‌ها | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-4 py-10">
+    {% include "advisor_panel/_nav.html" with active="activity_logs" %}
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold font-display text-ink">لاگ فعالیت‌ها</h1>
+        <a href="{% url 'advisor_panel:activity_log_create' %}" class="btn-primary text-sm">+ فعالیت جدید</a>
+    </div>
+
+    {% if activity_logs %}
+    <div class="bg-white rounded-xl border border-line divide-y divide-line">
+        {% for activity in activity_logs %}
+        <div class="p-5 {% if activity.is_done %}opacity-60{% endif %}">
+            <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-primary-light text-primary">{{ activity.get_activity_type_display }}</span>
+                    {% if activity.customer_name %}<span class="font-semibold text-ink">{{ activity.customer_name }}</span>{% endif %}
+                    {% if activity.customer_phone %}<span class="text-ink/40 text-sm">{{ activity.customer_phone }}</span>{% endif %}
+                </div>
+                <form method="post" action="{% url 'advisor_panel:activity_log_toggle_done' activity.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-xs px-3 py-1.5 rounded-full transition {% if activity.is_done %}bg-line text-ink/50 hover:bg-line/70{% else %}bg-primary text-white hover:bg-primary-dark{% endif %}">
+                        {% if activity.is_done %}بازگردانی به در انتظار{% else %}علامت‌گذاری به‌عنوان انجام‌شده{% endif %}
+                    </button>
+                </form>
+            </div>
+            {% if activity.property %}
+            <p class="text-sm text-ink/60 mb-1">ملک مرتبط: <a href="{{ activity.property.get_absolute_url }}" class="text-primary hover:underline">{{ activity.property.title }}</a></p>
+            {% endif %}
+            {% if activity.note %}<p class="text-sm text-ink/70">{{ activity.note }}</p>{% endif %}
+            <p class="text-xs text-ink/30 mt-2">
+                {% if activity.scheduled_at %}برنامه‌ریزی‌شده برای {{ activity.scheduled_at|date:"Y/m/d H:i" }} · {% endif %}
+                ثبت‌شده در {{ activity.created_at|date:"Y/m/d H:i" }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-outline text-sm">قبلی</a>{% endif %}
+        <span class="px-4 py-2 text-sm text-ink/60">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-outline text-sm">بعدی</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">هنوز فعالیتی ثبت نشده است.</p>
+    {% endif %}
+</section>
+{% endblock %}

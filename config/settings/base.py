@@ -43,6 +43,8 @@ LOCAL_APPS = [
     "apps.contact",
     "apps.blog",
     "apps.ai",
+    "apps.notifications",
+    "apps.crm",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
@@ -159,6 +161,18 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+
+# یادآوری خودکار فعالیت‌های برنامه‌ریزی‌شده‌ی مشاوران (apps.crm.tasks) — هر ۵ دقیقه بررسی می‌شود
+CELERY_BEAT_SCHEDULE = {
+    "send-activity-reminders": {
+        "task": "apps.crm.tasks.send_due_activity_reminders",
+        "schedule": 300.0,
+    },
+    "send-document-expiry-reminders": {
+        "task": "apps.crm.tasks.send_document_expiry_reminders",
+        "schedule": 86400.0,
+    },
+}
 
 # -----------------------------------------------------------------------
 # تنظیمات هوش مصنوعی DeepSeek

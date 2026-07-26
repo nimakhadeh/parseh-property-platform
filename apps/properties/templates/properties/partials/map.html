@@ -11,8 +11,8 @@
         {
             lat: {{ property.latitude|default:"0" }},
             lng: {{ property.longitude|default:"0" }},
-            title: {{ property.title|escapejs|default:"" }},
-            price: {{ property.price_display|escapejs|default:"" }},
+            title: "{{ property.title|escapejs|default:'' }}",
+            price: "{{ property.price_display|escapejs|default:'' }}",
             url: "{{ property.get_absolute_url }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}

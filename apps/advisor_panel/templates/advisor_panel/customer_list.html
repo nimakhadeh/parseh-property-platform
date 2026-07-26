@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}مشتریان | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-3xl mx-auto px-4 py-10">
+    {% include "advisor_panel/_nav.html" with active="customers" %}
+    <h1 class="text-2xl font-bold font-display text-ink mb-8">پرونده‌های مشتریان</h1>
+
+    <form method="get" class="mb-6">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="جستجو بر اساس نام یا شماره تماس..." class="input-field w-full">
+    </form>
+
+    {% if customers %}
+    <div class="bg-white rounded-xl border border-line divide-y divide-line">
+        {% for customer in customers %}
+        <a href="{% url 'advisor_panel:customer_profile' customer.phone %}" class="flex items-center justify-between p-4 hover:bg-primary-light/20 transition">
+            <span class="font-medium text-ink">{{ customer.name|default:"بدون نام" }}</span>
+            <span class="text-sm text-ink/50">{{ customer.phone }}</span>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}" class="btn-outline text-sm">قبلی</a>{% endif %}
+        <span class="px-4 py-2 text-sm text-ink/60">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}" class="btn-outline text-sm">بعدی</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">مشتری‌ای پیدا نشد.</p>
+    {% endif %}
+</section>
+{% endblock %}

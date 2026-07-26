@@ -1,0 +1,35 @@
+<div class="relative">
+    <button type="button"
+            onclick="document.getElementById('notif-dropdown').classList.toggle('hidden')"
+            class="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-primary-light transition"
+            title="اعلان‌ها" aria-label="اعلان‌ها">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-ink/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        {% if unread_count %}
+        <span class="absolute -top-1 -left-1 bg-accent text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">{{ unread_count }}</span>
+        {% endif %}
+    </button>
+    <div id="notif-dropdown" class="hidden absolute left-0 mt-2 w-80 max-w-[90vw] bg-white border border-line rounded-xl shadow-lg z-50 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-line">
+            <span class="font-semibold text-ink text-sm">اعلان‌ها</span>
+            {% if unread_count %}
+            <form method="post" action="{% url 'notifications:mark_all_read' %}">
+                {% csrf_token %}
+                <button type="submit" class="text-xs text-primary hover:underline">علامت‌گذاری همه به‌عنوان خوانده‌شده</button>
+            </form>
+            {% endif %}
+        </div>
+        <div class="max-h-96 overflow-y-auto divide-y divide-line">
+            {% for n in recent_notifications %}
+            <a href="{% url 'notifications:go' n.pk %}" class="block px-4 py-3 text-sm hover:bg-primary-light/40 transition {% if not n.is_read %}bg-primary-light/20{% endif %}">
+                <p class="text-ink {% if not n.is_read %}font-medium{% endif %}">{{ n.message }}</p>
+                <p class="text-ink/40 text-xs mt-1">{{ n.created_at|timesince }} پیش</p>
+            </a>
+            {% empty %}
+            <p class="px-4 py-6 text-center text-ink/40 text-sm">اعلانی وجود ندارد.</p>
+            {% endfor %}
+        </div>
+        <a href="{% url 'notifications:list' %}" class="block text-center py-2.5 text-sm text-primary hover:bg-primary-light/40 border-t border-line transition">مشاهده همه</a>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}تقویم | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-4 py-10">
+    {% include "advisor_panel/_nav.html" with active="calendar" %}
+    <h1 class="text-2xl font-bold font-display text-ink mb-8">تقویم فعالیت‌ها</h1>
+
+    {% if grouped_activities %}
+    <div class="space-y-6">
+        {% for day, activities in grouped_activities %}
+        <div>
+            <h2 class="text-sm font-semibold text-ink/60 mb-2">{{ day|date:"Y/m/d" }} — {{ day|date:"l" }}</h2>
+            <div class="bg-white rounded-xl border border-line divide-y divide-line">
+                {% for activity in activities %}
+                <div class="p-4 flex items-center gap-4 {% if activity.is_done %}opacity-50{% endif %}">
+                    <span class="text-sm font-bold text-primary w-14 shrink-0">{{ activity.scheduled_at|date:"H:i" }}</span>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-primary-light text-primary shrink-0">{{ activity.get_activity_type_display }}</span>
+                    <div class="min-w-0">
+                        {% if activity.customer_name %}<span class="font-medium text-ink">{{ activity.customer_name }}</span>{% endif %}
+                        {% if user.is_staff %}<span class="text-ink/40 text-sm"> · {{ activity.advisor.name }}</span>{% endif %}
+                        {% if activity.property %}
+                        <p class="text-xs text-ink/50 truncate">
+                            <a href="{{ activity.property.get_absolute_url }}" class="hover:underline">{{ activity.property.title }}</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">فعالیت برنامه‌ریزی‌شده‌ای وجود ندارد.</p>
+    {% endif %}
+</section>
+{% endblock %}

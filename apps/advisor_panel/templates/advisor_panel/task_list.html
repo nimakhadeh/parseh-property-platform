@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}کارتابل وظایف | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-4 py-10">
+    {% include "advisor_panel/_nav.html" with active="tasks" %}
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <h1 class="text-2xl font-bold font-display text-ink">کارتابل وظایف</h1>
+        {% if user.is_staff %}
+        <a href="{% url 'advisor_panel:task_assign' %}" class="btn-primary text-sm">+ وظیفه جدید</a>
+        {% endif %}
+    </div>
+
+    {% if tasks %}
+    <div class="space-y-4">
+        {% for task in tasks %}
+        <div class="bg-white rounded-xl border border-line p-5">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                <span class="font-semibold text-ink">{{ task.title }}</span>
+                <span class="text-xs px-2 py-1 rounded-full
+                    {% if task.status == 'pending' %}bg-accent/10 text-accent
+                    {% elif task.status == 'in_progress' %}bg-primary-light text-primary
+                    {% elif task.status == 'done' %}bg-green-50 text-green-700
+                    {% else %}bg-gray-100 text-ink/50{% endif %}">
+                    {{ task.get_status_display }}
+                </span>
+            </div>
+            {% if task.description %}<p class="text-sm text-ink/70 mb-2">{{ task.description }}</p>{% endif %}
+            {% if task.property %}
+            <p class="text-sm text-ink/60 mb-2">ملک مرتبط: <a href="{{ task.property.get_absolute_url }}" class="text-primary hover:underline">{{ task.property.title }}</a></p>
+            {% endif %}
+            <div class="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-line">
+                <span class="text-xs text-ink/40">
+                    محول‌شده به {{ task.assignee.name }}
+                    {% if task.assigner %} · از طرف {{ task.assigner.get_full_name|default:task.assigner.username }}{% endif %}
+                    {% if task.due_date %} · مهلت: {{ task.due_date|date:"Y/m/d H:i" }}{% endif %}
+                </span>
+                <form method="post" action="{% url 'advisor_panel:task_update_status' task.pk %}" class="flex items-center gap-2">
+                    {% csrf_token %}
+                    <select name="status" onchange="this.form.submit()" class="text-xs border border-line rounded-full px-2 py-1.5">
+                        {% for value, label in task.STATUS_CHOICES %}
+                        <option value="{{ value }}" {% if value == task.status %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-outline text-sm">قبلی</a>{% endif %}
+        <span class="px-4 py-2 text-sm text-ink/60">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-outline text-sm">بعدی</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-ink/40 text-sm bg-white rounded-xl border border-line p-10 text-center">وظیفه‌ای ثبت نشده است.</p>
+    {% endif %}
+</section>
+{% endblock %}

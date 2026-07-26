@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}عملکرد مشاوران | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-10">
+    {% include "advisor_panel/_nav.html" with active="performance" %}
+    <h1 class="text-2xl font-bold font-display text-ink mb-2">عملکرد مشاوران</h1>
+    <p class="text-ink/50 text-sm mb-8">جدول امتیاز و سرعت پاسخ‌دهی بر اساس ۳۰ روز اخیر است.</p>
+
+    <div class="space-y-10">
+        <div>
+            <h2 class="font-semibold text-ink mb-3">جدول امتیاز (۳۰ روز اخیر)</h2>
+            <div class="bg-white rounded-xl border border-line overflow-x-auto">
+                <table class="w-full text-sm min-w-[500px]">
+                    <thead>
+                        <tr class="border-b border-line text-ink/50 text-xs">
+                            <th class="text-right py-3 px-4 font-medium">رتبه</th>
+                            <th class="text-right py-3 px-4 font-medium">مشاور</th>
+                            <th class="text-right py-3 px-4 font-medium">فعالیت</th>
+                            <th class="text-right py-3 px-4 font-medium">وظیفه انجام‌شده</th>
+                            <th class="text-right py-3 px-4 font-medium">معامله موفق</th>
+                            <th class="text-right py-3 px-4 font-medium">امتیاز</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        {% for row in leaderboard %}
+                        <tr>
+                            <td class="py-3 px-4 text-ink/60">#{{ row.rank }}</td>
+                            <td class="py-3 px-4 text-ink font-medium">{{ row.advisor.name }}</td>
+                            <td class="py-3 px-4 text-ink/70">{{ row.activities }}</td>
+                            <td class="py-3 px-4 text-ink/70">{{ row.tasks_done }}</td>
+                            <td class="py-3 px-4 text-ink/70">{{ row.deals_won }}</td>
+                            <td class="py-3 px-4 font-bold text-primary">{{ row.score }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-ink/40 py-8">مشاور فعالی ثبت نشده است.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="font-semibold text-ink mb-3">سرعت پاسخ‌دهی (SLA) به لیدها</h2>
+            <div class="bg-white rounded-xl border border-line overflow-x-auto">
+                <table class="w-full text-sm min-w-[500px]">
+                    <thead>
+                        <tr class="border-b border-line text-ink/50 text-xs">
+                            <th class="text-right py-3 px-4 font-medium">مشاور</th>
+                            <th class="text-right py-3 px-4 font-medium">کل لیدها</th>
+                            <th class="text-right py-3 px-4 font-medium">پاسخ‌داده‌شده</th>
+                            <th class="text-right py-3 px-4 font-medium">در انتظار پاسخ</th>
+                            <th class="text-right py-3 px-4 font-medium">میانگین زمان پاسخ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        {% for row in sla_rows %}
+                        <tr>
+                            <td class="py-3 px-4 text-ink font-medium">{{ row.advisor.name }}</td>
+                            <td class="py-3 px-4 text-ink/70">{{ row.total_leads }}</td>
+                            <td class="py-3 px-4 text-ink/70">{{ row.responded }}</td>
+                            <td class="py-3 px-4 {% if row.pending %}text-brick font-medium{% else %}text-ink/70{% endif %}">{{ row.pending }}</td>
+                            <td class="py-3 px-4 text-ink/70">
+                                {% if row.avg_hours is not None %}{{ row.avg_hours|floatformat:1 }} ساعت{% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-ink/40 py-8">مشاور فعالی ثبت نشده است.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+                <h2 class="font-semibold text-ink">نقشه حرارتی فعالیت (۶ ماه اخیر)</h2>
+                <form method="get">
+                    <select name="advisor" onchange="this.form.submit()" class="input-field text-sm">
+                        <option value="">همه مشاوران</option>
+                        {% for a in advisors %}
+                        <option value="{{ a.pk }}" {% if selected_advisor_id == a.pk|stringformat:"s" %}selected{% endif %}>{{ a.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+            <div class="bg-white rounded-xl border border-line p-4 overflow-x-auto">
+                <div class="flex gap-3 w-fit">
+                    <div class="flex flex-col gap-1 justify-between text-[10px] text-ink/40 py-0.5">
+                        {% for label in heatmap_day_labels %}
+                        <span class="h-3 leading-3">{{ label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% for week in heatmap_weeks %}
+                    <div class="flex flex-col gap-1">
+                        {% for day in week %}
+                        {% if day %}
+                        <div
+                            title="{{ day.date }} — {{ day.count }} فعالیت"
+                            class="w-3 h-3 rounded-sm {% if day.level == 0 %}bg-line{% elif day.level == 1 %}bg-primary/20{% elif day.level == 2 %}bg-primary/40{% elif day.level == 3 %}bg-primary/70{% else %}bg-primary{% endif %}"
+                        ></div>
+                        {% else %}
+                        <div class="w-3 h-3"></div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="flex items-center gap-1.5 mt-4 text-[10px] text-ink/40">
+                    <span>کم</span>
+                    <div class="w-3 h-3 rounded-sm bg-line"></div>
+                    <div class="w-3 h-3 rounded-sm bg-primary/20"></div>
+                    <div class="w-3 h-3 rounded-sm bg-primary/40"></div>
+                    <div class="w-3 h-3 rounded-sm bg-primary/70"></div>
+                    <div class="w-3 h-3 rounded-sm bg-primary"></div>
+                    <span>زیاد</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -128,6 +128,19 @@ class PropertyDetailViewTests(TestCase):
         response = self.client.get(self.prop.get_absolute_url())
         self.assertEqual(response.status_code, 404)
 
+    def test_map_js_values_are_quoted_strings(self):
+        """
+        باگ واقعی: title/price در map.html بدون گیومه رندر می‌شدند و باعث خطای
+        سینتکس جاوااسکریپت می‌شدند (چون هیچ ملکی قبلاً مختصات نداشت، این باگ کشف نشده بود).
+        """
+        self.prop.latitude = 35.7
+        self.prop.longitude = 51.4
+        self.prop.save()
+        response = self.client.get(self.prop.get_absolute_url())
+        content = response.content.decode()
+        self.assertIn('title: "', content)
+        self.assertIn('price: "', content)
+
 
 class FavoriteToggleTests(TestCase):
     """
