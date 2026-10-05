@@ -11,9 +11,9 @@ if not ALLOWED_HOSTS or ALLOWED_HOSTS == ["localhost", "127.0.0.1"]:
 # -----------------------------------------------------------------------
 # امنیت تولید
 # -----------------------------------------------------------------------
-SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "False") == "True"
-SESSION_COOKIE_SECURE = os.environ.get("SECURE_SSL_REDIRECT", "False") == "True"
-CSRF_COOKIE_SECURE = os.environ.get("SECURE_SSL_REDIRECT", "False") == "True"
+SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "True") == "True"
+SESSION_COOKIE_SECURE = os.environ.get("SECURE_SSL_REDIRECT", "True") == "True"
+CSRF_COOKIE_SECURE = os.environ.get("SECURE_SSL_REDIRECT", "True") == "True"
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
