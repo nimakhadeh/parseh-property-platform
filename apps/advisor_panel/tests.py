@@ -69,6 +69,38 @@ class AdvisorPanelAccessControlTests(TestCase):
         new_property = Property.objects.get(title="ملک جدید تستی")
         self.assertEqual(new_property.advisor, self.advisor_a)
 
+
+    def test_only_one_advisor_can_claim_valuation_request(self):
+        """دو مشاور نباید بتوانند یک درخواست pending را همزمان claim کنند."""
+        from apps.properties.models import PropertyValuationRequest
+
+        valuation_request = PropertyValuationRequest.objects.create(
+            name="مالک تستی",
+            phone="09120000000",
+            transaction_type="sale",
+            address="تهران",
+        )
+
+        self.client.force_login(self.user_a)
+        response = self.client.post(
+            reverse("advisor_panel:valuation_claim", args=[valuation_request.pk])
+        )
+        self.assertEqual(response.status_code, 302)
+
+        valuation_request.refresh_from_db()
+        self.assertEqual(valuation_request.assigned_advisor, self.advisor_a)
+        self.assertEqual(valuation_request.status, "reviewed")
+
+        self.client.force_login(self.user_b)
+        response = self.client.post(
+            reverse("advisor_panel:valuation_claim", args=[valuation_request.pk])
+        )
+        self.assertEqual(response.status_code, 302)
+
+        valuation_request.refresh_from_db()
+        self.assertEqual(valuation_request.assigned_advisor, self.advisor_a)
+        self.assertEqual(valuation_request.status, "reviewed")
+
     def test_user_without_advisor_profile_cannot_access_panel(self):
         random_user = User.objects.create_user(username="randomuser", password="testpass123")
         self.client.force_login(random_user)
