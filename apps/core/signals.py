@@ -11,11 +11,15 @@ from apps.team.models import TeamMember
 
 
 def _clear_home_cache(**kwargs):
-    cache.delete_many([
+    property_instance = kwargs.get("instance")
+    keys = [
         "home:sale_properties", "home:rent_properties", "home:team_members",
         "home:stats_properties_count", "home:stats_advisors_count",
         "property_detail:related:sale", "property_detail:related:rent",
-    ])
+    ]
+    if property_instance is not None and getattr(property_instance, "pk", None):
+        keys.append(f"ai_analysis:property:{property_instance.pk}")
+    cache.delete_many(keys)
 
 
 post_save.connect(_clear_home_cache, sender=Property)
