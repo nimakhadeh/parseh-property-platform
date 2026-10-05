@@ -3,6 +3,8 @@ name: استقرار خودکار پلتفرم املاک پارسه
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   test:
