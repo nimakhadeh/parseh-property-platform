@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, TemplateView, View
+from django.db import transaction
 from django.db.models import Count, Q
 
 from apps.properties.models import Property, PropertyValuationRequest
@@ -163,11 +164,20 @@ class ClaimValuationRequestView(AdvisorRequiredMixin, View):
         if advisor is None:
             messages.error(request, "حساب شما به هیچ مشاوری متصل نیست.")
             return redirect("advisor_panel:valuation_queue")
-        valuation_request = get_object_or_404(PropertyValuationRequest, pk=pk)
-        valuation_request.assigned_advisor = advisor
-        valuation_request.status = "reviewed"
-        valuation_request.save(update_fields=["assigned_advisor", "status"])
-        messages.success(request, "درخواست برای پیگیری به شما اختصاص یافت.")
+        with transaction.atomic():
+            claimed = PropertyValuationRequest.objects.filter(
+                pk=pk,
+                status="pending",
+                assigned_advisor__isnull=True,
+            ).update(
+                assigned_advisor=advisor,
+                status="reviewed",
+            )
+
+        if claimed:
+            messages.success(request, "درخواست برای پیگیری به شما اختصاص یافت.")
+        else:
+            messages.warning(request, "این درخواست قبلاً توسط مشاور دیگری دریافت شده است.")
         return redirect("advisor_panel:valuation_queue")
 
 
