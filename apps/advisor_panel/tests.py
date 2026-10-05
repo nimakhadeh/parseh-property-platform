@@ -83,7 +83,7 @@ class AdvisorPanelAccessControlTests(TestCase):
 
         self.client.force_login(self.user_a)
         response = self.client.post(
-            reverse("advisor_panel:valuation_claim", args=[valuation_request.pk])
+            reverse("advisor_panel:claim_valuation_request", args=[valuation_request.pk])
         )
         self.assertEqual(response.status_code, 302)
 
@@ -93,7 +93,7 @@ class AdvisorPanelAccessControlTests(TestCase):
 
         self.client.force_login(self.user_b)
         response = self.client.post(
-            reverse("advisor_panel:valuation_claim", args=[valuation_request.pk])
+            reverse("advisor_panel:claim_valuation_request", args=[valuation_request.pk])
         )
         self.assertEqual(response.status_code, 302)
 
