@@ -9,53 +9,65 @@
 
     <form method="post" enctype="multipart/form-data" class="bg-white rounded-xl border border-line p-6 space-y-4">
         {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="text-red-600 text-sm" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
 
         <div>
-            <label class="block text-sm text-ink/70 mb-1">{{ form.name.label }}</label>
+            <label for="{{ form.name.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.name.label }}</label>
             {{ form.name }}
-            {% if form.name.errors %}<p class="text-red-600 text-xs mt-1">{{ form.name.errors.0 }}</p>{% endif %}
+                    {% if form.name.errors %}<span id="{{ form.name.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.name.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm text-ink/70 mb-1">{{ form.role.label }}</label>
+                <label for="{{ form.role.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.role.label }}</label>
                 {{ form.role }}
+                    {% if form.role.errors %}<span id="{{ form.role.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.role.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
             </div>
             <div>
-                <label class="block text-sm text-ink/70 mb-1">{{ form.phone.label }}</label>
+                <label for="{{ form.phone.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.phone.label }}</label>
                 {{ form.phone }}
+                    {% if form.phone.errors %}<span id="{{ form.phone.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.phone.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
             </div>
         </div>
 
         <div>
-            <label class="block text-sm text-ink/70 mb-1">{{ form.email.label }}</label>
+            <label for="{{ form.email.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.email.label }}</label>
             {{ form.email }}
+                    {% if form.email.errors %}<span id="{{ form.email.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.email.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
         </div>
 
         <div>
-            <label class="block text-sm text-ink/70 mb-1">{{ form.bio.label }}</label>
+            <label for="{{ form.bio.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.bio.label }}</label>
             {{ form.bio }}
+                    {% if form.bio.errors %}<span id="{{ form.bio.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.bio.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
         </div>
 
         <div>
-            <label class="block text-sm text-ink/70 mb-1">{{ form.image.label }}</label>
+            <label for="{{ form.image.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.image.label }}</label>
             {{ form.image }}
+                    {% if form.image.errors %}<span id="{{ form.image.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.image.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
         </div>
 
         <div class="border-t border-line pt-4">
-            <label class="block text-sm text-ink/70 mb-1">{{ form.user.label }}</label>
+            <label for="{{ form.user.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.user.label }}</label>
             {{ form.user }}
+                    {% if form.user.errors %}<span id="{{ form.user.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.user.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
             <p class="text-xs text-ink/40 mt-1">{{ form.user.help_text }}</p>
-            {% if form.user.errors %}<p class="text-red-600 text-xs mt-1">{{ form.user.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm text-ink/70 mb-1">{{ form.order.label }}</label>
+                <label for="{{ form.order.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.order.label }}</label>
                 {{ form.order }}
+                    {% if form.order.errors %}<span id="{{ form.order.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.order.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
             </div>
             <label class="flex items-center gap-2 text-sm text-ink/70 mt-6">
-                {{ form.is_active }} فعال (در سایت نمایش داده شود)
+                {{ form.is_active }}
+                    {% if form.is_active.errors %}<span id="{{ form.is_active.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.is_active.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %} فعال (در سایت نمایش داده شود)
             </label>
         </div>
 

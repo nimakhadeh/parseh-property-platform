@@ -27,7 +27,8 @@ class AdvisorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
     def test_func(self):
         user = self.request.user
-        return user.is_staff or hasattr(user, "team_member")
+        advisor = self.get_advisor()
+        return user.is_staff or (advisor is not None and advisor.is_active)
 
     def handle_no_permission(self):
         if self.request.user.is_authenticated:

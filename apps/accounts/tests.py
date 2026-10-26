@@ -5,7 +5,9 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from unittest.mock import patch
 
+from .forms import RegisterForm
 from .models import Profile
 from apps.properties.models import Property, Favorite
 from apps.properties.tests import make_test_image
@@ -40,6 +42,7 @@ class RegistrationTests(TestCase):
             HTTP_X_CSRFTOKEN=token,
         )
         self.assertTrue(User.objects.filter(username="amirtest").exists())
+        self.assertEqual(Profile.objects.get(user__username="amirtest").phone, "09121234567")
         # کاربر باید بلافاصله بعد از ثبت‌نام لاگین شده باشد
         self.assertIn("_auth_user_id", self.client.session)
 
@@ -54,6 +57,42 @@ class RegistrationTests(TestCase):
             HTTP_X_CSRFTOKEN=token,
         )
         self.assertFalse(User.objects.filter(username="baduser").exists())
+
+    def test_invalid_phone_does_not_create_user_or_profile(self):
+        token = self._get_csrf_token()
+        for phone in ("abc", "1" * 21):
+            with self.subTest(phone=phone):
+                response = self.client.post(
+                    reverse("accounts:register"),
+                    {
+                        "username": "invalidphone", "email": "phone@example.com", "phone": phone,
+                        "password1": "ComplexPass123!", "password2": "ComplexPass123!",
+                    },
+                    HTTP_X_CSRFTOKEN=token,
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("phone", response.context["form"].errors)
+                self.assertFalse(User.objects.filter(username="invalidphone").exists())
+                self.assertFalse(Profile.objects.filter(user__username="invalidphone").exists())
+
+    def test_registration_rolls_back_user_if_profile_save_fails(self):
+        form = RegisterForm(data={
+            "username": "atomicuser", "email": "atomic@example.com", "phone": "09121234567",
+            "password1": "ComplexPass123!", "password2": "ComplexPass123!",
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        original_save = Profile.save
+
+        def save_profile(instance, *args, **kwargs):
+            if instance.phone:
+                raise RuntimeError("Profile storage failed")
+            return original_save(instance, *args, **kwargs)
+
+        with patch.object(Profile, "save", autospec=True, side_effect=save_profile):
+            with self.assertRaisesMessage(RuntimeError, "Profile storage failed"):
+                form.save()
+        self.assertFalse(User.objects.filter(username="atomicuser").exists())
+        self.assertFalse(Profile.objects.filter(user__username="atomicuser").exists())
 
 
 class SessionFavoriteMergeTests(TestCase):
@@ -89,3 +128,32 @@ class SessionFavoriteMergeTests(TestCase):
 
         # مرحله ۳: علاقه‌مندی باید حالا در دیتابیس، متصل به حساب کاربری باشد
         self.assertTrue(Favorite.objects.filter(user=self.user, property=self.prop).exists())
+
+    def test_login_ignores_deleted_and_withdrawn_session_favorites(self):
+        withdrawn = Property.objects.create(
+            title="ملک منتشرنشده", description="-", price=100, transaction_type="sale",
+            area=80, rooms=2, address="-", image="", is_published=False,
+        )
+        deleted = Property.objects.create(
+            title="ملک حذف‌شده", description="-", price=100, transaction_type="sale",
+            area=80, rooms=2, address="-", image="",
+        )
+        deleted_id = deleted.pk
+        deleted.delete()
+        session = self.client.session
+        session["favorite_properties"] = [self.prop.pk, withdrawn.pk, deleted_id]
+        session.save()
+
+        self.client.get(reverse("accounts:login"))
+        response = self.client.post(
+            reverse("accounts:login"),
+            {"username": "mergeuser", "password": "testpass123"},
+            HTTP_X_CSRFTOKEN=self.client.cookies["csrftoken"].value,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            list(Favorite.objects.filter(user=self.user).values_list("property_id", flat=True)),
+            [self.prop.pk],
+        )
+        self.assertEqual(self.client.session["favorite_properties"], [])
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))

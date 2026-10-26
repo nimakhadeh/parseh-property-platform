@@ -25,3 +25,19 @@ def is_list_full(the_list, max_count=3):
 def as_list(value):
     """تبدیل یک آبجکت تکی به لیست یک‌عضوی (برای استفاده مجدد پارشیال نقشه با یک ملک)"""
     return [value] if value else []
+
+
+@register.filter
+def map_points(properties):
+    """دادهٔ نقشه برای json_script؛ متن‌ها هرگز به‌عنوان کد جاوااسکریپت رندر نمی‌شوند."""
+    return [
+        {
+            "lat": float(property_obj.latitude),
+            "lng": float(property_obj.longitude),
+            "title": property_obj.title,
+            "price": property_obj.price_display,
+            "url": property_obj.get_absolute_url(),
+        }
+        for property_obj in properties
+        if property_obj.latitude is not None and property_obj.longitude is not None
+    ]

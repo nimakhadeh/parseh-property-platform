@@ -9,29 +9,35 @@
 
     <form method="post" enctype="multipart/form-data" class="bg-white rounded-xl border border-line p-6 space-y-6">
         {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="text-red-600 text-sm" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
 
         <div>
             <h2 class="font-semibold text-ink mb-3">اطلاعات اصلی</h2>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-sm text-ink/70 mb-1">{{ form.title.label }}</label>
+                    <label for="{{ form.title.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.title.label }}</label>
                     {{ form.title }}
-                    {% if form.title.errors %}<p class="text-red-600 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+                    {% if form.title.errors %}<span id="{{ form.title.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.title.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
                 </div>
                 <div>
-                    <label class="block text-sm text-ink/70 mb-1">{{ form.description.label }}</label>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.description.label }}</label>
                     {{ form.description }}
-                    {% if form.description.errors %}<p class="text-red-600 text-xs mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+                    {% if form.description.errors %}<span id="{{ form.description.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.description.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm text-ink/70 mb-1">{{ form.transaction_type.label }}</label>
+                        <label for="{{ form.transaction_type.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.transaction_type.label }}</label>
                         {{ form.transaction_type }}
+                    {% if form.transaction_type.errors %}<span id="{{ form.transaction_type.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.transaction_type.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
                     </div>
                     <div>
-                        <label class="block text-sm text-ink/70 mb-1">{{ form.price.label }}</label>
+                        <label for="{{ form.price.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.price.label }}</label>
                         {{ form.price }}
-                        {% if form.price.errors %}<p class="text-red-600 text-xs mt-1">{{ form.price.errors.0 }}</p>{% endif %}
+                    {% if form.price.errors %}<span id="{{ form.price.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.price.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
                     </div>
                 </div>
             </div>
@@ -40,21 +46,30 @@
         <div class="border-t border-line pt-6">
             <h2 class="font-semibold text-ink mb-3">مشخصات فنی</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.area.label }}</label>{{ form.area }}</div>
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.rooms.label }}</label>{{ form.rooms }}</div>
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.floor.label }}</label>{{ form.floor }}</div>
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.total_floors.label }}</label>{{ form.total_floors }}</div>
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.year_built.label }}</label>{{ form.year_built }}</div>
+                <div><label for="{{ form.area.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.area.label }}</label>{{ form.area }}
+                    {% if form.area.errors %}<span id="{{ form.area.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.area.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
+                <div><label for="{{ form.rooms.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.rooms.label }}</label>{{ form.rooms }}
+                    {% if form.rooms.errors %}<span id="{{ form.rooms.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.rooms.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
+                <div><label for="{{ form.floor.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.floor.label }}</label>{{ form.floor }}
+                    {% if form.floor.errors %}<span id="{{ form.floor.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.floor.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
+                <div><label for="{{ form.total_floors.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.total_floors.label }}</label>{{ form.total_floors }}
+                    {% if form.total_floors.errors %}<span id="{{ form.total_floors.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.total_floors.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
+                <div><label for="{{ form.year_built.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.year_built.label }}</label>{{ form.year_built }}
+                    {% if form.year_built.errors %}<span id="{{ form.year_built.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.year_built.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
             </div>
         </div>
 
         <div class="border-t border-line pt-6">
             <h2 class="font-semibold text-ink mb-3">امکانات</h2>
             <div class="flex flex-wrap gap-4">
-                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_elevator }} آسانسور</label>
-                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_parking }} پارکینگ</label>
-                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_warehouse }} انباری</label>
-                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_balcony }} بالکن</label>
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_elevator }}
+                    {% if form.has_elevator.errors %}<span id="{{ form.has_elevator.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.has_elevator.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %} آسانسور</label>
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_parking }}
+                    {% if form.has_parking.errors %}<span id="{{ form.has_parking.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.has_parking.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %} پارکینگ</label>
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_warehouse }}
+                    {% if form.has_warehouse.errors %}<span id="{{ form.has_warehouse.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.has_warehouse.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %} انباری</label>
+                <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.has_balcony }}
+                    {% if form.has_balcony.errors %}<span id="{{ form.has_balcony.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.has_balcony.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %} بالکن</label>
             </div>
         </div>
 
@@ -62,12 +77,15 @@
             <h2 class="font-semibold text-ink mb-3">موقعیت مکانی</h2>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-sm text-ink/70 mb-1">{{ form.address.label }}</label>
+                    <label for="{{ form.address.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.address.label }}</label>
                     {{ form.address }}
+                    {% if form.address.errors %}<span id="{{ form.address.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.address.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-sm text-ink/70 mb-1">{{ form.latitude.label }}</label>{{ form.latitude }}</div>
-                    <div><label class="block text-sm text-ink/70 mb-1">{{ form.longitude.label }}</label>{{ form.longitude }}</div>
+                    <div><label for="{{ form.latitude.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.latitude.label }}</label>{{ form.latitude }}
+                    {% if form.latitude.errors %}<span id="{{ form.latitude.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.latitude.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
+                    <div><label for="{{ form.longitude.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.longitude.label }}</label>{{ form.longitude }}
+                    {% if form.longitude.errors %}<span id="{{ form.longitude.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.longitude.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
                 </div>
                 <p class="text-xs text-ink/40">مختصات را می‌توانید از Google Maps (کلیک راست روی نقطه مورد نظر) کپی کنید.</p>
             </div>
@@ -77,19 +95,24 @@
             <h2 class="font-semibold text-ink mb-3">تصاویر</h2>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-sm text-ink/70 mb-1">{{ form.image.label }} (الزامی)</label>
+                    <label for="{{ form.image.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.image.label }} (الزامی)</label>
                     {{ form.image }}
-                    {% if form.image.errors %}<p class="text-red-600 text-xs mt-1">{{ form.image.errors.0 }}</p>{% endif %}
+                    {% if form.image.errors %}<span id="{{ form.image.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.image.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}
                 </div>
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.image_2.label }}</label>{{ form.image_2 }}</div>
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.image_3.label }}</label>{{ form.image_3 }}</div>
-                <div><label class="block text-sm text-ink/70 mb-1">{{ form.image_4.label }}</label>{{ form.image_4 }}</div>
+                <div><label for="{{ form.image_2.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.image_2.label }}</label>{{ form.image_2 }}
+                    {% if form.image_2.errors %}<span id="{{ form.image_2.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.image_2.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
+                <div><label for="{{ form.image_3.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.image_3.label }}</label>{{ form.image_3 }}
+                    {% if form.image_3.errors %}<span id="{{ form.image_3.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.image_3.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
+                <div><label for="{{ form.image_4.id_for_label }}" class="block text-sm text-ink/70 mb-1">{{ form.image_4.label }}</label>{{ form.image_4 }}
+                    {% if form.image_4.errors %}<span id="{{ form.image_4.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.image_4.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %}</div>
             </div>
         </div>
 
         <div class="border-t border-line pt-6 flex flex-wrap gap-4">
-            <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.is_published }} منتشر شود</label>
-            <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.is_featured }} ملک ویژه</label>
+            <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.is_published }}
+                    {% if form.is_published.errors %}<span id="{{ form.is_published.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.is_published.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %} منتشر شود</label>
+            <label class="flex items-center gap-2 text-sm text-ink/70">{{ form.is_featured }}
+                    {% if form.is_featured.errors %}<span id="{{ form.is_featured.id_for_label }}_error" class="block text-red-600 text-xs mt-1" role="alert">{% for error in form.is_featured.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>{% endif %} ملک ویژه</label>
         </div>
 
         <div class="flex gap-3 pt-2">

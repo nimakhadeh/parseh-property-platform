@@ -6,9 +6,10 @@ from django.shortcuts import render, redirect
 from django.views.generic import CreateView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.db import transaction
 
-from apps.properties.models import Favorite, PropertyView
-from apps.properties.wishlist_views import _favorite_ids
+from apps.properties.models import Favorite, Property, PropertyView
+from apps.properties.wishlist_views import _compare_ids, _favorite_ids
 from apps.contact.models import ContactRequest
 from .forms import RegisterForm, ProfileUpdateForm, UserUpdateForm, StyledAuthenticationForm
 
@@ -19,9 +20,15 @@ def _merge_session_favorites_into_account(request, user):
     ثبت‌نام/ورود می‌کند، این تابع آن‌ها را به حساب کاربری‌اش منتقل می‌کند.
     """
     session_favorites = request.session.get("favorite_properties", [])
-    for property_id in session_favorites:
-        Favorite.objects.get_or_create(user=user, property_id=property_id)
     if session_favorites:
+        # Lock surviving properties while creating references so a concurrent
+        # deletion cannot invalidate a favorite during the login merge.
+        with transaction.atomic():
+            properties = Property.objects.select_for_update().filter(
+                pk__in=session_favorites, is_published=True,
+            )
+            for property_obj in properties:
+                Favorite.objects.get_or_create(user=user, property=property_obj)
         request.session["favorite_properties"] = []
         request.session.modified = True
 
@@ -67,7 +74,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context["recent_views"] = PropertyView.objects.filter(user=user).select_related("property")[:12]
         context["contact_requests"] = ContactRequest.objects.filter(user=user).select_related("property")[:10]
         context["favorite_ids"] = _favorite_ids(self.request)
-        context["compare_ids"] = self.request.session.get("compare_properties", [])
+        context["compare_ids"] = _compare_ids(self.request)
         context["user_form"] = UserUpdateForm(instance=user)
         context["profile_form"] = ProfileUpdateForm(instance=getattr(user, "profile", None))
         return context

@@ -49,7 +49,9 @@ class ValuationRequestCreateView(CreateView):
         except Exception:
             from .valuation_notify import notify_new_valuation_request
             notify_new_valuation_request(self.object)
-        return self.render_to_response(self.get_context_data(success=True))
+        response = self.render_to_response(self.get_context_data(success=True))
+        response["HX-Trigger"] = "valuation-submitted"
+        return response
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form, success=False))

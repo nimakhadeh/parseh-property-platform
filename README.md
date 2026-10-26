@@ -25,8 +25,8 @@
 
 | بخش | فناوری |
 |---|---|
-| فریم‌ورک | Django 5.1 |
-| زبان | Python 3.12 |
+| فریم‌ورک | Django 5.2 LTS |
+| زبان | Python 3.10+ (پایتون پیش‌فرض Ubuntu 22.04 / 24.04) |
 | دیتابیس | PostgreSQL 16 |
 | کش / صف پیام | Redis + Celery |
 | وب‌سرور | Nginx |
@@ -40,17 +40,17 @@
 
 - سرور اوبونتو **22.04** یا **24.04** (VPS تازه با دسترسی root)
 - حداقل ۱ گیگابایت رم (پیشنهاد: ۲ گیگابایت به بالا)
-- یک دامنه (اختیاری، برای SSL)
+- یک دامنه با DNS متصل به سرور (برای HTTPS اجباری در نصب تولید)
 - کلید API از [DeepSeek](https://platform.deepseek.com) (برای فعال‌سازی تحلیل هوشمند)
 
 ---
 
 ## 🚀 نصب سریع روی سرور (کمتر از ۱۰ دقیقه)
 
-۱. پروژه را روی سرور کپی کنید (از طریق `git clone` یا آپلود فایل‌ها):
+۱. مخزن را روی سرور clone کنید:
 
 ```bash
-git clone <آدرس-ریپازیتوری-شما> parseh_project
+git clone https://github.com/nimakhadeh/parseh-property-platform.git parseh_project
 cd parseh_project
 ```
 
@@ -62,21 +62,22 @@ sudo bash setup.sh
 
 این اسکریپت به‌صورت خودکار موارد زیر را انجام می‌دهد:
 
-- نصب PostgreSQL، Redis، Nginx و پایتون ۳.۱۲
+- نصب PostgreSQL، Redis، Nginx و نسخه پیش‌فرض Python 3 در اوبونتو
 - ساخت دیتابیس و کاربر PostgreSQL با رمز تصادفی امن
-- کپی پروژه به مسیر `/opt/parseh_project`
+- clone کردن checkout واقعی گیت در `/opt/parseh_project` روی همان commit سورس (برای استقرارهای بعدی)
 - ساخت فایل `.env` با مقادیر پیش‌فرض (نیازمند تکمیل دستی برخی مقادیر مانند `DEEPSEEK_API_KEY`)
 - ساخت محیط مجازی و نصب وابستگی‌ها
 - اجرای `migrate` و `collectstatic`
 - فعال‌سازی سرویس‌های systemd برای Gunicorn و Celery
 - تنظیم و فعال‌سازی Nginx
-- پیشنهاد فعال‌سازی SSL رایگان با Certbot
+- فعال‌سازی HTTPS با Certbot؛ خطای صدور گواهی باعث توقف نصب می‌شود، نه ارائه سایت با HTTP
 
 ۳. کاربر مدیر (superuser) بسازید:
 
 ```bash
 cd /opt/parseh_project
 source venv/bin/activate
+set -a; source ./.env; set +a
 python manage.py createsuperuser
 ```
 
@@ -88,7 +89,7 @@ sudo nano /opt/parseh_project/.env
 sudo systemctl restart parseh parseh-celery parseh-celery-beat
 ```
 
-سایت شما اکنون در آدرس دامنه یا IP سرور در دسترس است. 🎉
+سایت شما اکنون در آدرس `https://دامنه-شما` در دسترس است. 🎉
 
 ---
 
@@ -126,7 +127,7 @@ sudo systemctl restart parseh parseh-celery parseh-celery-beat
 ### چک‌لیست قبل از انتشار عمومی
 - [ ] `ADMIN_URL` را به یک مسیر تصادفی تغییر بده
 - [ ] `SECRET_KEY` را با `openssl rand -hex 32` تولید کن (نه مقدار پیش‌فرض)
-- [ ] بعد از فعال‌سازی SSL، `SECURE_SSL_REDIRECT=True` را در `.env` قرار بده
+- [ ] روی نصب‌های قدیمی، پس از فعال‌سازی SSL مقدار `SECURE_SSL_REDIRECT=True` را در `.env` قرار بده و سرویس‌ها را restart کن (نصب جدید خودکار این کار را انجام می‌دهد)
 - [ ] رمز عبور قوی برای دیتابیس PostgreSQL تنظیم کن
 - [ ] `python manage.py createsuperuser` را با یک نام‌کاربری/رمز قوی (نه admin/admin) اجرا کن
 - [ ] فایروال سرور را فعال کن (فقط پورت‌های ۲۲، ۸۰، ۴۴۳ باز باشند)
@@ -228,9 +229,10 @@ sudo systemctl restart parseh parseh-celery parseh-celery-beat
 ```bash
 # فعال‌سازی محیط مجازی
 source /opt/parseh_project/venv/bin/activate
+cd /opt/parseh_project
+set -a; source ./.env; set +a
 
-# اجرای مایگریشن‌ها پس از تغییر مدل‌ها
-python manage.py makemigrations
+# مایگریشن‌ها در توسعه ساخته و همراه کد commit می‌شوند؛ روی سرور فقط اعمال می‌شوند
 python manage.py migrate
 
 # جمع‌آوری فایل‌های استاتیک
@@ -289,7 +291,8 @@ python manage.py test --verbosity=2
 
 1. تست‌های پروژه را روی یک دیتابیس PostgreSQL موقت اجرا می‌کند.
 2. در صورت موفقیت تست‌ها، از طریق SSH به سرور شما متصل شده و به‌صورت خودکار:
-   - آخرین کد را `pull` می‌کند
+   - دقیقاً SHA همان commit تاییدشده را fetch و checkout می‌کند (حتی اگر main جلوتر رفته باشد)
+   - متغیرهای `.env` را برای migrate و collectstatic بارگذاری می‌کند
    - وابستگی‌ها را به‌روزرسانی می‌کند
    - `migrate` و `collectstatic` را اجرا می‌کند
    - سرویس‌های Gunicorn و Celery را ری‌استارت می‌کند
@@ -302,7 +305,18 @@ python manage.py test --verbosity=2
 | `VPS_HOST` | آدرس IP یا دامنه سرور |
 | `VPS_USER` | نام کاربری SSH (مثلاً `root` یا `deploy`) |
 
-> نکته: کاربر سرویس‌دهنده باید بدون رمز عبور اجازه‌ی اجرای `sudo systemctl restart` را داشته باشد (با تنظیم `visudo`).
+اگر هیچ‌یک از سه Secret تنظیم نشده باشند، تست‌ها اجرا می‌شوند و مرحله استقرار با پیام روشن رد می‌شود. پیکربندی ناقص (فقط بعضی Secretها) خطا می‌دهد. استقرارها هم‌زمان اجرا نمی‌شوند و فایل‌های tracked تغییرکرده روی سرور باید پیش از استقرار تعیین تکلیف شوند.
+
+> کاربر `VPS_USER` باید همان مالک checkout ساخته‌شده با setup باشد (پیش‌فرض: کاربری که sudo را اجرا کرده، یا root). این کاربر باید اجازه خواندن `.env` و اجرای بدون رمز `sudo systemctl restart parseh parseh-celery parseh-celery-beat` را داشته باشد. فقط `run/`، `logs/` و `media/` برای کاربر وب‌سرور قابل نوشتن هستند.
+
+### انتقال نصب‌های قبلی و بک‌آپ
+
+- اگر `/opt/parseh_project` با نسخه قدیمی setup کپی شده و `.git` ندارد، قبل از فعال‌کردن CI از دیتابیس، `.env` و `media/` بک‌آپ بگیرید؛ سپس یک checkout واقعی در مسیر استقرار آماده و فایل‌های زمان اجرا را منتقل کنید. setup روی پوشه غیرگیت موجود، داده‌ها را بازنویسی نمی‌کند.
+- فایل `.env` توسط shell و systemd خوانده می‌شود؛ مقدارهای دارای فاصله یا نویسه‌های ویژه را داخل کوتیشن قرار دهید. فرمان مدیریتی دستی باید پس از `set -a; source ./.env; set +a` اجرا شود.
+- برای بک‌آپ روزانه، cron توضیح‌داده‌شده در `backup_db.sh` را فعال کنید. تنها dump کامل و موفق با تغییر نام اتمی منتشر می‌شود؛ شکست dump باعث حذف نسخه‌های قبلی نمی‌شود. نسخه ابری با `RCLONE_REMOTE` اختیاری است.
+- بازیابی: `sudo bash restore_db.sh /path/to/backup.sql.gz`. فایل ابتدا کامل باز می‌شود؛ سپس schema عمومی PostgreSQL و dump در یک transaction جایگزین می‌شوند. خطای SQL باعث rollback می‌شود و سرویس‌هایی که پیش از عملیات فعال بودند دوباره راه‌اندازی می‌شوند. نقش DB باید مالک schema عمومی باشد (setup جدید این مالکیت را تنظیم می‌کند).
+- اسکریپت بازیابی مخصوص مدل‌های پروژه در schema عمومی است؛ پیش از استفاده عملی، بازیابی را روی دیتابیس آزمایشی امتحان کنید. فایل‌های `media/` باید جداگانه بک‌آپ گرفته شوند.
+- تست‌های مستقل این اسکریپت‌ها هیچ دسترسی به دیتابیس یا systemd واقعی ندارند: `python -m unittest discover -s tests -p 'test_operational_scripts.py'`.
 
 ---
 

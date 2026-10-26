@@ -8,6 +8,42 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
 from .models import ContactRequest
+from .forms import ContactRequestForm
+from apps.properties.models import Property
+
+
+class ContactVisitFormTests(TestCase):
+    def setUp(self):
+        self.property = Property.objects.create(
+            title="آپارتمان تست", description="توضیحات", price=1_000_000,
+            transaction_type="sale", area=80, rooms=2, address="تهران",
+            image="properties/test.webp",
+        )
+        self.data = {"name": "علی", "phone": "09121234567", "message": ""}
+
+    def test_visit_request_allows_empty_message(self):
+        form = ContactRequestForm(data={**self.data, "property": self.property.pk})
+        self.assertTrue(form.is_valid(), form.errors)
+        contact = form.save()
+        self.assertEqual(contact.property, self.property)
+        self.assertEqual(contact.message, "")
+
+    def test_general_contact_still_requires_message(self):
+        form = ContactRequestForm(data=self.data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("message", form.errors)
+
+    def test_invalid_property_cannot_bypass_general_message_requirement(self):
+        form = ContactRequestForm(data={**self.data, "property": self.property.pk + 100})
+        self.assertFalse(form.is_valid())
+        self.assertIn("property", form.errors)
+
+    def test_unpublished_property_cannot_receive_public_visit_requests(self):
+        self.property.is_published = False
+        self.property.save(update_fields=["is_published"])
+        form = ContactRequestForm(data={**self.data, "property": self.property.pk})
+        self.assertFalse(form.is_valid())
+        self.assertIn("property", form.errors)
 
 
 class ContactRequestModelTests(TestCase):

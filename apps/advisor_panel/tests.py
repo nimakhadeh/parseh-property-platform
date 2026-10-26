@@ -119,6 +119,24 @@ class AdvisorPanelAccessControlTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
+    def test_deactivating_advisor_revokes_existing_session_access(self):
+        self.client.force_login(self.user_a)
+        manager = User.objects.create_user(username="revokingmanager", is_staff=True)
+        manager_client = Client()
+        manager_client.force_login(manager)
+        manager_client.post(reverse("advisor_panel:manager_advisor_toggle", args=[self.advisor_a.pk]))
+        self.advisor_a.refresh_from_db()
+        self.assertFalse(self.advisor_a.is_active)
+
+        for route in ("dashboard", "property_list", "contact_requests", "valuation_queue"):
+            with self.subTest(route=route):
+                response = self.client.get(reverse(f"advisor_panel:{route}"))
+                self.assertEqual(response.status_code, 403)
+        response = self.client.post(reverse("advisor_panel:property_delete", args=[self.property_a.pk]))
+        self.assertEqual(response.status_code, 403)
+        self.property_a.refresh_from_db()
+        self.assertTrue(self.property_a.is_published)
+
 
 class ManagerAdvisorPanelTests(TestCase):
     """تست پنل مدیریت مشاوران (فقط برای is_staff)"""

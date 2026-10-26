@@ -1,167 +1,98 @@
 #!/usr/bin/env bash
-# ============================================================================
-# اسکریپت نصب خودکار پلتفرم املاک پارسه روی سرور Ubuntu 22.04 / 24.04
-# استفاده:  sudo bash setup.sh
-# فرض بر این است که این اسکریپت کنار پوشه‌ی کامل پروژه اجرا می‌شود.
-# ============================================================================
-set -e
+# نصب روی Ubuntu 22.04 / 24.04 از یک checkout گیت؛ اجرا: sudo bash setup.sh
+set -euo pipefail
+umask 022
 
-PROJECT_NAME="parseh_project"
-PROJECT_DIR="/opt/${PROJECT_NAME}"
-DB_NAME="parseh_db"
-DB_USER="parseh_user"
-DOMAIN=""
-
-info()    { echo -e "\e[32m[اطلاعات]\e[0m $1"; }
-warn()    { echo -e "\e[33m[هشدار]\e[0m $1"; }
-error()   { echo -e "\e[31m[خطا]\e[0m $1"; exit 1; }
-
-if [[ $EUID -ne 0 ]]; then
-    error "این اسکریپت باید با دسترسی root یا sudo اجرا شود. مثال: sudo bash setup.sh"
-fi
-
+PROJECT_DIR="/opt/parseh_project"
+DEPLOY_USER="${SUDO_USER:-root}"
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+info() { echo "[اطلاعات] $1"; }
+error() { echo "[خطا] $1" >&2; exit 1; }
+[[ ${EUID} -eq 0 ]] || error "با sudo bash setup.sh اجرا کنید."
 
-# ----------------------------------------------------------------------------
-# ۱) نصب بسته‌های سیستمی
-# ----------------------------------------------------------------------------
-info "بروزرسانی مخازن و نصب بسته‌های سیستمی مورد نیاز..."
+# Python پیش‌فرض هر دو نسخه اوبونتو با Django 5.2 سازگار است.
 apt-get update -y
-apt-get install -y \
-    python3.12 python3.12-venv python3-pip \
-    postgresql postgresql-contrib \
-    libpq-dev binutils \
-    redis-server nginx git curl build-essential
+apt-get install -y python3 python3-venv python3-pip postgresql postgresql-contrib \
+    libpq-dev binutils redis-server nginx git curl build-essential openssl \
+    certbot python3-certbot-nginx
 
-# ----------------------------------------------------------------------------
-# ۲) راه‌اندازی و فعال‌سازی PostgreSQL و Redis
-# ----------------------------------------------------------------------------
-info "فعال‌سازی سرویس‌های PostgreSQL و Redis..."
-systemctl enable --now postgresql
-systemctl enable --now redis-server
-
-# ----------------------------------------------------------------------------
-# ۳) ایجاد کاربر و دیتابیس PostGIS
-# ----------------------------------------------------------------------------
-info "ایجاد کاربر و دیتابیس PostgreSQL با پشتیبانی PostGIS..."
-DB_PASSWORD=$(openssl rand -hex 16)
-
-sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}'" | grep -q 1 || \
-    sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';"
-
-sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1 || \
-    sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};"
-
-sudo -u postgres psql -c "ALTER ROLE ${DB_USER} SET client_encoding TO 'utf8';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
-
-# ----------------------------------------------------------------------------
-# ۴) کپی پروژه در /opt/parseh_project
-# ----------------------------------------------------------------------------
-info "کپی فایل‌های پروژه به ${PROJECT_DIR}..."
-mkdir -p "${PROJECT_DIR}"
-rsync -a --exclude 'venv' --exclude '.git' --exclude '__pycache__' "${SOURCE_DIR}/" "${PROJECT_DIR}/"
-mkdir -p "${PROJECT_DIR}/run" "${PROJECT_DIR}/logs" "${PROJECT_DIR}/media" "${PROJECT_DIR}/staticfiles"
-
-# ----------------------------------------------------------------------------
-# ۵) تنظیم فایل .env
-# ----------------------------------------------------------------------------
-if [[ ! -f "${PROJECT_DIR}/.env" ]]; then
-    info "ایجاد فایل .env با مقادیر پیش‌فرض..."
-    SECRET_KEY=$(openssl rand -hex 32)
-    read -rp "دامنه یا IP سرور خود را وارد کنید (مثلاً example.com یا 1.2.3.4): " DOMAIN
-    DOMAIN=${DOMAIN:-localhost}
-
-    cp "${PROJECT_DIR}/.env.example" "${PROJECT_DIR}/.env"
-    sed -i "s|SECRET_KEY=.*|SECRET_KEY=${SECRET_KEY}|" "${PROJECT_DIR}/.env"
-    sed -i "s|ALLOWED_HOSTS=.*|ALLOWED_HOSTS=${DOMAIN},localhost,127.0.0.1|" "${PROJECT_DIR}/.env"
-    sed -i "s|DB_NAME=.*|DB_NAME=${DB_NAME}|" "${PROJECT_DIR}/.env"
-    sed -i "s|DB_USER=.*|DB_USER=${DB_USER}|" "${PROJECT_DIR}/.env"
-    sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" "${PROJECT_DIR}/.env"
-
-    warn "فایل .env با مقادیر پیش‌فرض ساخته شد. لطفاً بعداً مقدار DEEPSEEK_API_KEY و سایر تنظیمات دلخواه را در ${PROJECT_DIR}/.env ویرایش کنید."
-else
-    info "فایل .env از قبل موجود است؛ از مقادیر فعلی استفاده می‌شود."
+SOURCE_COMMIT=$(git -c safe.directory="${SOURCE_DIR}" -C "${SOURCE_DIR}" rev-parse HEAD) || error "نصب باید از checkout گیت اجرا شود."
+REPOSITORY_URL=$(git -c safe.directory="${SOURCE_DIR}" -C "${SOURCE_DIR}" remote get-url origin) || error "remote با نام origin تنظیم نشده است."
+if [[ "${SOURCE_DIR}" != "${PROJECT_DIR}" ]]; then
+    if [[ ! -e "${PROJECT_DIR}" ]]; then
+        git clone "${REPOSITORY_URL}" "${PROJECT_DIR}"
+        git -c safe.directory="${PROJECT_DIR}" -C "${PROJECT_DIR}" checkout --detach "${SOURCE_COMMIT}"
+    elif ! git -c safe.directory="${PROJECT_DIR}" -C "${PROJECT_DIR}" rev-parse --git-dir >/dev/null 2>&1; then
+        error "${PROJECT_DIR} از قبل وجود دارد ولی checkout گیت نیست؛ ابتدا داده‌ها و .env را نگه‌داری و مقصد را برای clone آماده کنید."
+    else
+        info "checkout موجود حفظ شد؛ بروزرسانی کد را با پایپلاین انجام دهید."
+    fi
 fi
-
-# ----------------------------------------------------------------------------
-# ۶) ساخت محیط مجازی و نصب وابستگی‌ها
-# ----------------------------------------------------------------------------
-info "ساخت محیط مجازی پایتون و نصب وابستگی‌ها..."
 cd "${PROJECT_DIR}"
-python3.12 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements/production.txt
-deactivate
+mkdir -p run logs media staticfiles
 
-# ----------------------------------------------------------------------------
-# ۷) اجرای migrate و collectstatic
-# ----------------------------------------------------------------------------
-info "اجرای migrate و collectstatic..."
-set -a
-source "${PROJECT_DIR}/.env"
-set +a
-
-"${PROJECT_DIR}/venv/bin/python" manage.py migrate --noinput
-"${PROJECT_DIR}/venv/bin/python" manage.py collectstatic --noinput
-
-info "برای ساخت کاربر مدیر (superuser)، بعد از پایان اسکریپت دستور زیر را اجرا کنید:"
-echo "  cd ${PROJECT_DIR} && source venv/bin/activate && python manage.py createsuperuser"
-
-# ----------------------------------------------------------------------------
-# ۸) مالکیت فایل‌ها برای کاربر www-data
-# ----------------------------------------------------------------------------
-chown -R www-data:www-data "${PROJECT_DIR}"
-
-# ----------------------------------------------------------------------------
-# ۹) کپی و فعال‌سازی فایل‌های systemd
-# ----------------------------------------------------------------------------
-info "نصب سرویس‌های systemd..."
-cp "${PROJECT_DIR}/parseh.service" /etc/systemd/system/parseh.service
-cp "${PROJECT_DIR}/parseh-celery.service" /etc/systemd/system/parseh-celery.service
-cp "${PROJECT_DIR}/parseh-celery-beat.service" /etc/systemd/system/parseh-celery-beat.service
-
-systemctl daemon-reload
-systemctl enable --now parseh.service
-systemctl enable --now parseh-celery.service
-systemctl enable --now parseh-celery-beat.service
-
-# ----------------------------------------------------------------------------
-# ۱۰) تنظیم Nginx
-# ----------------------------------------------------------------------------
-info "تنظیم Nginx..."
-NGINX_CONF="/etc/nginx/sites-available/parseh"
-cp "${PROJECT_DIR}/nginx.conf" "${NGINX_CONF}"
-if [[ -n "${DOMAIN}" && "${DOMAIN}" != "localhost" ]]; then
-    sed -i "s/server_name example.com www.example.com;/server_name ${DOMAIN};/" "${NGINX_CONF}"
+if [[ ! -f .env ]]; then
+    read -rp "دامنه سایت برای گواهی HTTPS (مثلاً example.com): " DOMAIN
+    [[ "${DOMAIN}" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*\.[A-Za-z]{2,}$ ]] || error "دامنه معتبر با DNS متصل به سرور لازم است."
+    install -m 600 .env.example .env
+    SECRET_KEY=$(openssl rand -hex 32)
+    DB_PASSWORD=$(openssl rand -hex 16)
+    sed -i "s|^SECRET_KEY=.*|SECRET_KEY=${SECRET_KEY}|; s|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=${DOMAIN},localhost,127.0.0.1|; s|^CSRF_TRUSTED_ORIGINS=.*|CSRF_TRUSTED_ORIGINS=https://${DOMAIN}|; s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" .env
 fi
+set -a
+source ./.env
+set +a
+DOMAIN="${ALLOWED_HOSTS%%,*}"
+[[ "${DOMAIN}" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*\.[A-Za-z]{2,}$ ]] || error "اولین ALLOWED_HOSTS باید دامنه سایت با DNS معتبر باشد."
+[[ "${DB_NAME}" =~ ^[a-z_][a-z0-9_]*$ && "${DB_USER}" =~ ^[a-z_][a-z0-9_]*$ ]] || error "DB_NAME و DB_USER باید شناسه ساده PostgreSQL باشند."
+# این نصب دیتابیس محلی را مدیریت می‌کند؛ اتصال راه دور باید جداگانه آماده شود.
+[[ "${DB_HOST:-127.0.0.1}" == "127.0.0.1" || "${DB_HOST:-127.0.0.1}" == "localhost" ]] || error "setup.sh فقط PostgreSQL محلی را ایجاد می‌کند."
+
+systemctl enable --now postgresql redis-server
+# مقدار رمز از stdin ارسال می‌شود تا در آرگومان قابل مشاهده پردازش نباشد.
+SQL_DB_PASSWORD="${DB_PASSWORD//\'/\'\'}"
+sudo -u postgres psql --no-psqlrc --set=ON_ERROR_STOP=1 \
+    --set=db_name="${DB_NAME}" --set=db_user="${DB_USER}" <<SQL
+SET standard_conforming_strings = on;
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', '${SQL_DB_PASSWORD}')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'db_user') \gexec
+SELECT format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user')
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'db_name') \gexec
+SQL
+sudo -u postgres psql --no-psqlrc --set=ON_ERROR_STOP=1 --dbname="${DB_NAME}" \
+    --set=db_user="${DB_USER}" <<'SQL'
+ALTER SCHEMA public OWNER TO :"db_user";
+SQL
+
+python3 -m venv venv
+venv/bin/python -m pip install --upgrade pip
+venv/bin/python -m pip install -r requirements/production.txt
+venv/bin/python manage.py migrate --noinput
+venv/bin/python manage.py collectstatic --noinput
+
+# کد و checkout برای deploy user؛ فقط داده‌های زمان اجرا برای www-data قابل نوشتن‌اند.
+chown -R "${DEPLOY_USER}:www-data" "${PROJECT_DIR}"
+chmod 640 .env
+chown -R www-data:www-data run logs media
+cp parseh.service parseh-celery.service parseh-celery-beat.service /etc/systemd/system/
+systemctl daemon-reload
+
+NGINX_CONF="/etc/nginx/sites-available/parseh"
+cp nginx.conf "${NGINX_CONF}"
+sed -i "s/server_name example.com www.example.com;/server_name ${DOMAIN};/" "${NGINX_CONF}"
 ln -sf "${NGINX_CONF}" /etc/nginx/sites-enabled/parseh
 rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl reload nginx
 
-nginx -t && systemctl reload nginx
-
-# ----------------------------------------------------------------------------
-# ۱۱) پیشنهاد فعال‌سازی SSL با Certbot
-# ----------------------------------------------------------------------------
-echo
-read -rp "آیا مایلید SSL رایگان با Certbot (Let's Encrypt) فعال شود؟ [y/N]: " ENABLE_SSL
-if [[ "${ENABLE_SSL}" =~ ^[Yy]$ ]]; then
-    apt-get install -y certbot python3-certbot-nginx
-    certbot --nginx -d "${DOMAIN}" --non-interactive --agree-tos -m "admin@${DOMAIN}" || \
-        warn "فعال‌سازی SSL ناموفق بود؛ می‌توانید بعداً دستی اجرا کنید: certbot --nginx -d ${DOMAIN}"
+# گواهی قبل از ارائه سایت فعال می‌شود. خطای صدور گواهی نصب موفق گزارش نمی‌شود.
+certbot --nginx --redirect -d "${DOMAIN}" --non-interactive --agree-tos -m "admin@${DOMAIN}"
+if grep -q '^SECURE_SSL_REDIRECT=' .env; then
+    sed -i 's/^SECURE_SSL_REDIRECT=.*/SECURE_SSL_REDIRECT=True/' .env
+else
+    echo 'SECURE_SSL_REDIRECT=True' >> .env
 fi
-
-# ----------------------------------------------------------------------------
-# پایان
-# ----------------------------------------------------------------------------
-echo
-info "نصب با موفقیت به پایان رسید! ✅"
-echo "  آدرس پروژه: http://${DOMAIN}"
-echo "  مسیر پروژه: ${PROJECT_DIR}"
-echo "  فایل env:   ${PROJECT_DIR}/.env"
-echo
-info "برای بررسی وضعیت سرویس‌ها:"
-echo "  systemctl status parseh"
-echo "  systemctl status parseh-celery"
-echo "  systemctl status parseh-celery-beat"
+systemctl enable --now parseh parseh-celery parseh-celery-beat
+systemctl restart parseh parseh-celery parseh-celery-beat
+info "نصب کامل شد: https://${DOMAIN}"
+info "برای ساخت مدیر: cd ${PROJECT_DIR}; set -a; source ./.env; set +a; venv/bin/python manage.py createsuperuser"
