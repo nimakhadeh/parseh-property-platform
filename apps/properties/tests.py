@@ -101,6 +101,38 @@ class PropertyListViewTests(TestCase):
         self.assertIn("ملک اجاره", titles)
         self.assertNotIn("ملک فروش ارزان", titles)
 
+    def test_invalid_numeric_filters_are_ignored(self):
+        for field, overflow in (
+            ("min_price", 2**63), ("max_price", 2**63),
+            ("min_area", 2**31), ("max_area", 2**31), ("rooms", 2**15),
+        ):
+            for value in ("abc", "1.5", "-1", str(overflow), "9" * 5000):
+                with self.subTest(field=field, value=value[:30]):
+                    response = self.client.get(reverse("properties:property_list"), {field: value})
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(len(response.context["properties"]), 2)
+
+    def test_valid_numeric_filters_still_apply_with_invalid_other_fields(self):
+        response = self.client.get(reverse("properties:property_list"), {
+            "min_price": "invalid", "max_price": "100000000", "rooms": "999999999999999999999",
+        })
+        self.assertEqual([p.title for p in response.context["properties"]], ["ملک اجاره"])
+
+    def test_reversed_ranges_are_ignored_without_discarding_valid_filters(self):
+        response = self.client.get(reverse("properties:property_list"), {
+            "min_price": "1000000000", "max_price": "50000000",
+            "min_area": "100", "max_area": "50", "type": "rent",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([p.title for p in response.context["properties"]], ["ملک اجاره"])
+
+    def test_valid_numeric_bounds_are_applied_together(self):
+        response = self.client.get(reverse("properties:property_list"), {
+            "min_price": "100000000", "max_price": "1000000000",
+            "min_area": "70", "max_area": "90", "rooms": "2",
+        })
+        self.assertEqual([p.title for p in response.context["properties"]], ["ملک فروش ارزان"])
+
 
 class PropertyDetailViewTests(TestCase):
     """تست صفحه جزئیات ملک"""
@@ -210,3 +242,59 @@ class CompareToggleTests(TestCase):
         self.client.post(reverse("properties:toggle_compare", args=[self.properties[3].pk]), HTTP_X_CSRFTOKEN=token)
         session = self.client.session
         self.assertEqual(len(session.get("compare_properties", [])), 3)
+
+    def _set_compare_ids(self, ids):
+        session = self.client.session
+        session["compare_properties"] = ids
+        session.save()
+
+    def test_unavailable_selections_do_not_consume_comparison_slots(self):
+        token = self._get_csrf_token()
+        first, deleted, retained, new = self.properties
+        self._set_compare_ids([retained.pk, first.pk, deleted.pk])
+        first.is_published = False
+        first.save(update_fields=["is_published"])
+        deleted.delete()
+
+        response = self.client.post(
+            reverse("properties:toggle_compare", args=[new.pk]), HTTP_X_CSRFTOKEN=token,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.client.session["compare_properties"], [retained.pk, new.pk])
+
+    def test_comparison_pages_prune_stale_ids_and_keep_selection_order(self):
+        first, withdrawn, third, _ = self.properties
+        withdrawn.is_published = False
+        withdrawn.save(update_fields=["is_published"])
+        original_ids = [third.pk, withdrawn.pk, first.pk]
+        expected_ids = [third.pk, first.pk]
+
+        for route in ("compare_bar", "compare_view"):
+            with self.subTest(route=route):
+                self._set_compare_ids(original_ids)
+                response = self.client.get(reverse(f"properties:{route}"))
+                self.assertEqual([p.pk for p in response.context["properties"]], expected_ids)
+                self.assertEqual(self.client.session["compare_properties"], expected_ids)
+
+    def test_comparison_count_and_property_buttons_exclude_unavailable_ids(self):
+        first, withdrawn, third, _ = self.properties
+        withdrawn.is_published = False
+        withdrawn.save(update_fields=["is_published"])
+        original_ids = [third.pk, withdrawn.pk, first.pk]
+        expected_ids = [third.pk, first.pk]
+
+        self._set_compare_ids(original_ids)
+        response = self.client.get(reverse("properties:header_counts"))
+        self.assertEqual(response.context["compare_count"], 2)
+        self.assertEqual(self.client.session["compare_properties"], expected_ids)
+
+        for url in (
+            reverse("properties:property_list"), first.get_absolute_url(),
+            reverse("properties:favorites_list"),
+        ):
+            with self.subTest(url=url):
+                self._set_compare_ids(original_ids)
+                response = self.client.get(url)
+                self.assertEqual(response.context["compare_ids"], expected_ids)
+                self.assertEqual(self.client.session["compare_properties"], expected_ids)

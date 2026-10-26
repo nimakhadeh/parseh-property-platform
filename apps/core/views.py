@@ -1,7 +1,7 @@
 from django.core.cache import cache
 from django.views.generic import TemplateView
 from apps.properties.models import Property
-from apps.properties.wishlist_views import _favorite_ids
+from apps.properties.wishlist_views import _favorite_ids, _compare_ids
 from apps.team.models import TeamMember
 from .models import FAQ
 
@@ -47,7 +47,7 @@ class HomeView(TemplateView):
 
         # این بخش‌ها هیچ‌وقت کش نمی‌شوند چون به کاربر/session جاری وابسته‌اند
         context["favorite_ids"] = _favorite_ids(self.request)
-        context["compare_ids"] = self.request.session.get("compare_properties", [])
+        context["compare_ids"] = _compare_ids(self.request)
         return context
 
 

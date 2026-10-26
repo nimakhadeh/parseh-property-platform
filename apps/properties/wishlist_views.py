@@ -14,6 +14,20 @@ from .models import Property, Favorite
 MAX_COMPARE = 3
 
 
+def _compare_ids(request):
+    """Remove unavailable selections while preserving the visitor's order."""
+    ids = request.session.get("compare_properties", [])
+    if not ids:
+        return []
+    published_ids = set(
+        Property.objects.filter(pk__in=ids, is_published=True).values_list("pk", flat=True)
+    )
+    available_ids = [pk for pk in ids if pk in published_ids]
+    if available_ids != ids:
+        request.session["compare_properties"] = available_ids
+    return available_ids
+
+
 def _toggle_session_list(request, session_key, property_id, max_items=None):
     items = request.session.get(session_key, [])
     if property_id in items:
@@ -69,6 +83,7 @@ def toggle_favorite(request, pk):
 @require_POST
 def toggle_compare(request, pk):
     """افزودن/حذف ملک از لیست مقایسه (حداکثر ۳ ملک، همیشه مبتنی بر session)"""
+    _compare_ids(request)
     property_obj = get_object_or_404(Property, pk=pk, is_published=True)
     items, added, is_full = _toggle_session_list(
         request, "compare_properties", property_obj.pk, max_items=MAX_COMPARE
@@ -90,7 +105,7 @@ def toggle_compare(request, pk):
 
 def compare_bar(request):
     """نوار شناور پایین صفحه که ملک‌های انتخاب‌شده برای مقایسه را نشان می‌دهد"""
-    ids = request.session.get("compare_properties", [])
+    ids = _compare_ids(request)
     properties = list(Property.objects.filter(pk__in=ids, is_published=True))
     properties.sort(key=lambda p: ids.index(p.pk) if p.pk in ids else 0)
     return render(request, "properties/partials/compare_bar.html", {"properties": properties})
@@ -99,7 +114,7 @@ def compare_bar(request):
 def header_counts(request):
     """شمارنده‌های کوچک علاقه‌مندی و مقایسه در هدر سایت"""
     favorites_count = len(_favorite_ids(request))
-    compare_count = len(request.session.get("compare_properties", []))
+    compare_count = len(_compare_ids(request))
     return render(request, "properties/partials/header_counts.html", {
         "favorites_count": favorites_count,
         "compare_count": compare_count,
@@ -120,13 +135,13 @@ def favorites_list(request):
     return render(request, "properties/favorites_list.html", {
         "properties": properties,
         "favorite_ids": _favorite_ids(request),
-        "compare_ids": request.session.get("compare_properties", []),
+        "compare_ids": _compare_ids(request),
     })
 
 
 def compare_view(request):
     """صفحه مقایسه ملک‌ها"""
-    ids = request.session.get("compare_properties", [])
+    ids = _compare_ids(request)
     properties = list(Property.objects.filter(pk__in=ids, is_published=True).select_related("advisor"))
     # حفظ ترتیب انتخاب کاربر
     properties.sort(key=lambda p: ids.index(p.pk) if p.pk in ids else 0)

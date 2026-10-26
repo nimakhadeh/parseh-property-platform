@@ -8,11 +8,12 @@
 #   # این خط را اضافه کنید (هر شب ساعت ۳ بامداد):
 #   0 3 * * * /opt/parseh_project/backup_db.sh >> /opt/parseh_project/logs/backup.log 2>&1
 # ============================================================================
-set -e
+set -euo pipefail
+umask 077
 
-PROJECT_DIR="/opt/parseh_project"
+PROJECT_DIR="${PARSEH_PROJECT_DIR:-/opt/parseh_project}"
 BACKUP_DIR="${PROJECT_DIR}/backups"
-DATE=$(date +%Y-%m-%d_%H-%M)
+DATE=$(date +%Y-%m-%d_%H-%M-%S)
 KEEP_DAYS=14  # نگه‌داری بک‌آپ‌ها تا ۱۴ روز، قدیمی‌تر خودکار پاک می‌شود
 RCLONE_KEEP_DAYS=30  # روی فضای ابری بیشتر از خود سرور نگه می‌داریم
 
@@ -23,17 +24,20 @@ set +a
 
 mkdir -p "${BACKUP_DIR}"
 
-BACKUP_FILE="${BACKUP_DIR}/parseh_db_${DATE}.sql.gz"
+# فایل ناتمام هرگز به عنوان بک‌آپ نهایی منتشر نمی‌شود.
+BACKUP_FILE="${BACKUP_DIR}/parseh_db_${DATE}_$$.sql.gz"
+TEMP_FILE=$(mktemp "${BACKUP_DIR}/.parseh-backup.XXXXXX")
+trap 'rm -f -- "${TEMP_FILE}"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 echo "[$(date)] شروع بک‌آپ دیتابیس..."
-PGPASSWORD="${DB_PASSWORD}" pg_dump -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" -U "${DB_USER}" "${DB_NAME}" | gzip > "${BACKUP_FILE}"
-
-if [ -s "${BACKUP_FILE}" ]; then
-    echo "[$(date)] بک‌آپ با موفقیت ذخیره شد: ${BACKUP_FILE} ($(du -h "${BACKUP_FILE}" | cut -f1))"
-else
-    echo "[$(date)] خطا: فایل بک‌آپ خالی است!"
-    exit 1
-fi
+PGPASSWORD="${DB_PASSWORD}" pg_dump --no-owner --no-privileges \
+    -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" \
+    -U "${DB_USER}" "${DB_NAME}" | gzip > "${TEMP_FILE}"
+gzip --test "${TEMP_FILE}"
+mv -- "${TEMP_FILE}" "${BACKUP_FILE}"
+echo "[$(date)] بک‌آپ با موفقیت ذخیره شد: ${BACKUP_FILE}"
 
 # پاک‌سازی بک‌آپ‌های قدیمی‌تر از KEEP_DAYS روز
 find "${BACKUP_DIR}" -name "parseh_db_*.sql.gz" -mtime +${KEEP_DAYS} -delete

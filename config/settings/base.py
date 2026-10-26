@@ -209,3 +209,4 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # ۱۰ مگابایت برای 
 # -----------------------------------------------------------------------
 RATELIMIT_ENABLE = True
 RATELIMIT_USE_CACHE = "default"  # از همان کش Redis استفاده می‌شود
+RATELIMIT_IP_META_KEY = "apps.core.client_ip.get_client_ip"

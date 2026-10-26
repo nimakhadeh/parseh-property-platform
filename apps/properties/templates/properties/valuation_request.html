@@ -20,7 +20,7 @@
               hx-post="{% url 'properties:valuation_request_submit' %}"
               hx-target="#valuation-result"
               hx-swap="innerHTML"
-              hx-on::after-request="if(event.detail.successful) this.reset()"
+              hx-on:valuation-submitted="this.reset()"
               enctype="multipart/form-data"
               class="space-y-4">
             {% csrf_token %}

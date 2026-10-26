@@ -13,7 +13,7 @@
             <h1 class="text-2xl font-bold font-display text-ink">لیست املاک</h1>
             <p class="text-sm text-ink/50 mt-0.5">{{ page_obj.paginator.count|default:0 }} ملک یافت شد</p>
         </div>
-        <button type="button" onclick="document.getElementById('map-wrapper').classList.toggle('hidden')"
+        <button id="map-toggle" type="button" aria-controls="map-wrapper" aria-expanded="false"
                 class="flex items-center gap-1.5 text-sm text-primary hover:text-primary-dark font-medium transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -124,4 +124,19 @@
         {% include "properties/partials/property_list_items.html" %}
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.getElementById('map-toggle').addEventListener('click', function() {
+        var wrapper = document.getElementById('map-wrapper');
+        var hidden = wrapper.classList.toggle('hidden');
+        this.setAttribute('aria-expanded', String(!hidden));
+        if (!hidden) {
+            wrapper.querySelectorAll('[data-property-map]').forEach(function(mapEl) {
+                mapEl.dispatchEvent(new Event('parseh:map-shown'));
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -4,7 +4,8 @@ from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from .models import Property, PropertyView as PropertyViewHistory
-from .wishlist_views import _favorite_ids
+from .filter_forms import PropertyFilterForm
+from .wishlist_views import _favorite_ids, _compare_ids
 
 # کش استخر ملک‌های مرتبط برای صفحه جزئیات؛ فقط ۲ کلید (sale/rent) پس با
 # ابطال کش صفحه اصلی هماهنگ است (apps/core/signals.py::_clear_home_cache)
@@ -31,25 +32,18 @@ class PropertyListView(ListView):
         if query:
             qs = qs.filter(Q(title__icontains=query) | Q(address__icontains=query))
 
-        if g.get("min_price"):
-            qs = qs.filter(price__gte=g.get("min_price"))
-        if g.get("max_price"):
-            qs = qs.filter(price__lte=g.get("max_price"))
+        filters = PropertyFilterForm(g)
+        filters.is_valid()
+        # Invalid individual fields/ranges are ignored; valid filters still apply.
+        for field in ("price", "area"):
+            for bound, lookup in (("min", "gte"), ("max", "lte")):
+                value = filters.cleaned_data.get(f"{bound}_{field}")
+                if value is not None:
+                    qs = qs.filter(**{f"{field}__{lookup}": value})
 
-        if g.get("min_area"):
-            qs = qs.filter(area__gte=g.get("min_area"))
-        if g.get("max_area"):
-            qs = qs.filter(area__lte=g.get("max_area"))
-
-        if g.get("rooms"):
-            try:
-                rooms = int(g.get("rooms"))
-                if rooms >= 4:
-                    qs = qs.filter(rooms__gte=4)
-                else:
-                    qs = qs.filter(rooms=rooms)
-            except ValueError:
-                pass
+        rooms = filters.cleaned_data.get("rooms")
+        if rooms is not None:
+            qs = qs.filter(rooms__gte=4) if rooms >= 4 else qs.filter(rooms=rooms)
 
         if g.get("has_elevator"):
             qs = qs.filter(has_elevator=True)
@@ -79,7 +73,7 @@ class PropertyListView(ListView):
             p for p in context["properties"] if p.latitude and p.longitude
         ]
         context["favorite_ids"] = _favorite_ids(self.request)
-        context["compare_ids"] = self.request.session.get("compare_properties", [])
+        context["compare_ids"] = _compare_ids(self.request)
 
         qs_dict = self.request.GET.copy()
         qs_dict.pop("page", None)
@@ -127,5 +121,5 @@ class PropertyDetailView(DetailView):
 
         # این بخش‌ها هیچ‌وقت کش نمی‌شوند چون به کاربر/session جاری وابسته‌اند
         context["favorite_ids"] = _favorite_ids(self.request)
-        context["compare_ids"] = self.request.session.get("compare_properties", [])
+        context["compare_ids"] = _compare_ids(self.request)
         return context

@@ -9,6 +9,7 @@ Group=www-data
 WorkingDirectory=/opt/parseh_project
 EnvironmentFile=/opt/parseh_project/.env
 ExecStart=/opt/parseh_project/venv/bin/celery -A config beat \
+    --schedule=/opt/parseh_project/run/celerybeat-schedule \
     --loglevel=info \
     --logfile=/opt/parseh_project/logs/celery-beat.log
 Restart=always

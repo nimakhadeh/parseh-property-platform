@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: اجرای تست‌ها
@@ -62,6 +65,14 @@ jobs:
       - name: بررسی مشکلات جنگو
         run: python manage.py check
 
+      - name: بررسی مایگریشن‌های ثبت‌نشده
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: بررسی اسکریپت‌های عملیاتی
+        run: |
+          bash -n setup.sh backup_db.sh restore_db.sh
+          python -m unittest discover -s tests -p "test_operational_scripts.py"
+
       - name: اجرای مایگریشن‌ها (آزمایشی)
         run: python manage.py migrate --noinput
 
@@ -75,26 +86,57 @@ jobs:
     name: استقرار روی سرور
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: parseh-production
+      cancel-in-progress: false
 
     steps:
-      - name: بررسی کد
-        uses: actions/checkout@v4
+      - name: بررسی تنظیمات اختیاری استقرار
+        id: deployment
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$VPS_HOST" && -z "$VPS_USER" && -z "$SSH_PRIVATE_KEY" ]]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Deployment skipped: configure VPS_HOST, VPS_USER and SSH_PRIVATE_KEY to enable it."
+            exit 0
+          fi
+          for name in VPS_HOST VPS_USER SSH_PRIVATE_KEY; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Incomplete deployment configuration: missing $name."
+              exit 1
+            fi
+          done
+          echo "configured=true" >> "$GITHUB_OUTPUT"
 
-      - name: استقرار از طریق SSH
+      - name: استقرار همان commit تاییدشده از طریق SSH
+        if: steps.deployment.outputs.configured == 'true'
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DEPLOY_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: DEPLOY_SHA
           script: |
-            set -e
+            set -eu
             cd /opt/parseh_project
-            git pull origin main
-            source venv/bin/activate
-            pip install -r requirements/production.txt
-            python manage.py migrate --noinput
-            python manage.py collectstatic --noinput
-            sudo systemctl restart parseh
-            sudo systemctl restart parseh-celery
-            sudo systemctl restart parseh-celery-beat
+            test -d .git
+            git diff --exit-code --quiet
+            git diff --cached --exit-code --quiet
+            git fetch origin "$DEPLOY_SHA"
+            git checkout --detach "$DEPLOY_SHA"
+            set -a
+            . ./.env
+            set +a
+            export DJANGO_SETTINGS_MODULE=config.settings.production
+            venv/bin/python -m pip install -r requirements/production.txt
+            venv/bin/python manage.py migrate --noinput
+            venv/bin/python manage.py collectstatic --noinput
+            sudo systemctl restart parseh parseh-celery parseh-celery-beat

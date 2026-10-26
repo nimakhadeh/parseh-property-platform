@@ -4,7 +4,8 @@ from django.contrib.auth.forms import (
     PasswordResetForm, SetPasswordForm,
 )
 from django.contrib.auth.models import User
-from .models import Profile
+from django.db import transaction
+from .models import Profile, phone_validator
 
 INPUT_CLASS = "input-field"
 
@@ -50,7 +51,10 @@ class RegisterForm(UserCreationForm):
     """فرم ثبت‌نام با فیلد اضافه شماره تماس"""
 
     email = forms.EmailField(label="ایمیل", required=True, widget=forms.EmailInput(attrs={"class": INPUT_CLASS, "placeholder": "ایمیل"}))
-    phone = forms.CharField(label="شماره تماس", required=False, widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "شماره تماس (اختیاری)"}))
+    phone = forms.CharField(
+        label="شماره تماس", required=False, max_length=20, validators=[phone_validator],
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "شماره تماس (اختیاری)"}),
+    )
 
     class Meta:
         model = User
@@ -66,6 +70,7 @@ class RegisterForm(UserCreationForm):
         for field in self.fields.values():
             field.help_text = None
 
+    @transaction.atomic
     def save(self, commit=True):
         user = super().save(commit=commit)
         if commit:
@@ -74,6 +79,7 @@ class RegisterForm(UserCreationForm):
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.phone = self.cleaned_data.get("phone", "")
             profile.save()
+            user.profile = profile
         return user
 
 
