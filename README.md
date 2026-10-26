@@ -1,4 +1,38 @@
-# 🏠 پلتفرم املاک پارسه (Parseh Property Platform)
+# Parseh Property Platform
+
+A Persian real estate application built with Django, HTMX and Tailwind CSS. It brings property discovery, customer accounts and advisor workflows into a server-rendered web application, with optional AI-assisted property analysis through DeepSeek.
+
+**Python · Django · PostgreSQL · Redis · Celery · HTMX · Tailwind CSS**
+
+[Overview](#overview) · [Code tour](#code-tour) · [Persian guide / راهنمای فارسی](#persian-guide) · [Server setup](#server-setup) · [Tests](#automated-tests) · [Deployment](#deployment)
+
+## Overview
+
+- **Property discovery:** filter published listings by transaction type, price, area, rooms and amenities; browse paginated results with HTMX and view locations on Leaflet/OpenStreetMap.
+- **Saved properties:** guest favorites and comparisons use browser sessions; signed-in favorites are stored in the database. Comparisons support up to three properties.
+- **Advisor workspace:** manage assigned listings and contact requests, with separate staff access and a property valuation request queue.
+- **AI integration:** request property analysis through DeepSeek, with an API-key check, request rate limiting and a Celery fallback.
+- **Persian interface:** Django templates provide an RTL interface, alongside account, blog and contact features.
+
+The application uses Django views and templates with HTMX responses. PostgreSQL stores application data; Redis and Celery support caching and background work. Gunicorn, Nginx and systemd configuration are included for server deployment.
+
+## Code tour
+
+| Area | Start here |
+|---|---|
+| Listing filters and HTMX pagination | [Property views](apps/properties/views.py) |
+| Session and account favorites; comparison limit | [Wishlist views](apps/properties/wishlist_views.py) |
+| Advisor workflows and access-control regression tests | [Advisor views](apps/advisor_panel/views.py) · [Tests](apps/advisor_panel/tests.py) |
+| AI request handling and provider client | [AI view](apps/ai/views.py) · [DeepSeek service](apps/ai/services/deepseek.py) |
+| Dependencies and configuration | [Requirements](requirements/base.txt) · [Settings](config/settings/) · [Environment example](.env.example) |
+
+The Persian guide below contains the server installation instructions, configuration reference, feature details, test commands and deployment workflow.
+
+---
+
+<a id="persian-guide"></a>
+
+## 🏠 پلتفرم املاک پارسه (Parseh Property Platform)
 
 پلتفرمی حرفه‌ای برای مدیریت، نمایش و تحلیل هوشمند املاک — ساخته شده با Django، Tailwind CSS، HTMX و اتصال به هوش مصنوعی DeepSeek.
 
@@ -45,12 +79,14 @@
 
 ---
 
+<a id="server-setup"></a>
+
 ## 🚀 نصب سریع روی سرور (کمتر از ۱۰ دقیقه)
 
 ۱. پروژه را روی سرور کپی کنید (از طریق `git clone` یا آپلود فایل‌ها):
 
 ```bash
-git clone <آدرس-ریپازیتوری-شما> parseh_project
+git clone https://github.com/nimakhadeh/parseh-property-platform.git parseh_project
 cd parseh_project
 ```
 
@@ -252,6 +288,8 @@ sudo systemctl reload nginx
 
 ---
 
+<a id="automated-tests"></a>
+
 ## 🧪 تست‌های خودکار
 
 پروژه شامل ۳۹ تست خودکار (`apps/*/tests.py`) روی مهم‌ترین و پرریسک‌ترین بخش‌هاست:
@@ -282,6 +320,8 @@ python manage.py test --verbosity=2
 > نکته: تست‌ها از دیتابیس تستی جداگانه استفاده می‌کنند (خودکار ساخته و در پایان پاک می‌شود)، پس هیچ آسیبی به دیتای واقعی سایت نمی‌زنند.
 
 ---
+
+<a id="deployment"></a>
 
 ## 🔄 استقرار خودکار با CI/CD (GitHub Actions)
 
@@ -335,3 +375,4 @@ parseh_project/
 ---
 
 ساخته‌شده با ❤️ برای پلتفرم املاک پارسه.
+
